@@ -5,34 +5,54 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 const photos = [
   {
-    src: "https://images.unsplash.com/photo-1521673461164-de300ebcfb17?w=600",
-    captionEn: "Skydiving with Batch 2",
-    captionRu: "Прыжок с парашютом с группой 2",
+    src: "/community/photo1.jpeg",
+    captionEn: "Skydiving adventure with our community",
+    captionRu: "Прыжки с парашютом с нашим сообществом",
   },
   {
-    src: "https://images.unsplash.com/photo-1529543544282-ea669407fca3?w=600",
-    captionEn: "Graduation Dinner",
-    captionRu: "Выпускной ужин",
+    src: "/community/photo2.jpeg",
+    captionEn: "Team dinner after graduation",
+    captionRu: "Командный ужин после выпуска",
   },
   {
-    src: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600",
-    captionEn: "Cooking Together",
+    src: "/community/photo3.jpeg",
+    captionEn: "Ready to jump! Batch 2 skydiving day",
+    captionRu: "Готовы прыгать! День прыжков группы 2",
+  },
+  {
+    src: "/community/photo4.jpeg",
+    captionEn: "Celebrating together",
+    captionRu: "Празднуем вместе",
+  },
+  {
+    src: "/community/photo5.jpeg",
+    captionEn: "Our amazing students",
+    captionRu: "Наши замечательные студенты",
+  },
+  {
+    src: "/community/photo6.jpeg",
+    captionEn: "Community gathering",
+    captionRu: "Встреча сообщества",
+  },
+  {
+    src: "/community/photo7.jpeg",
+    captionEn: "JumpToTech event night",
+    captionRu: "Вечер мероприятий JumpToTech",
+  },
+  {
+    src: "/community/photo8.jpeg",
+    captionEn: "Graduation celebration",
+    captionRu: "Праздник выпуска",
+  },
+  {
+    src: "/community/photo9.jpeg",
+    captionEn: "Cooking together",
     captionRu: "Готовим вместе",
   },
   {
-    src: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600",
-    captionEn: "Community Events",
-    captionRu: "Мероприятия сообщества",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600",
-    captionEn: "Graduation Day",
-    captionRu: "День выпуска",
-  },
-  {
-    src: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600",
-    captionEn: "Team Building",
-    captionRu: "Тимбилдинг",
+    src: "/community/photo10.jpeg",
+    captionEn: "Friends for life",
+    captionRu: "Друзья на всю жизнь",
   },
 ];
 
@@ -53,17 +73,18 @@ export function CommunityPhotos() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
         {photos.map((photo, i) => (
           <div
             key={i}
-            className="relative rounded-2xl overflow-hidden aspect-[4/3] cursor-default"
+            className="relative rounded-2xl overflow-hidden break-inside-avoid mb-4 cursor-default"
           >
             <Image
               src={photo.src}
               alt={t(photo.captionEn, photo.captionRu)}
-              fill
-              className="object-cover"
+              width={600}
+              height={450}
+              className="w-full h-auto block object-cover"
               sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             />
             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent pt-8 pb-3 px-3">
