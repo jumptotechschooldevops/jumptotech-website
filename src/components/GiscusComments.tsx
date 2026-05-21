@@ -17,10 +17,11 @@ export function GiscusComments({ term }: GiscusCommentsProps) {
 
     const script = document.createElement("script");
     script.src = "https://giscus.app/client.js";
-    script.setAttribute("data-repo", "jumptotech/devops-school");
-    script.setAttribute("data-repo-id", "R_kgDOExample");
+    script.setAttribute("data-repo", "jumptotechschooldevops/jumptotech-website");
+    script.setAttribute("data-repo-id", "R_kgDOSkMZWA");
     script.setAttribute("data-category", "General");
-    script.setAttribute("data-category-id", "DIC_kwDOExample");
+    // TODO: enable GitHub Discussions on the repo, then get the category ID from https://giscus.app
+    script.setAttribute("data-category-id", "");
     script.setAttribute("data-mapping", "specific");
     script.setAttribute("data-term", term);
     script.setAttribute("data-strict", "0");

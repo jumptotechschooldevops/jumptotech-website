@@ -204,9 +204,7 @@ export default function HomePage() {
                   <div className="absolute top-2 right-2">
                     <span
                       className={`px-2 py-0.5 rounded-md text-xs font-semibold text-white ${
-                        lecture.type === "video"
-                          ? "bg-[#185FA5]"
-                          : lecture.type === "lab"
+                        lecture.type === "lab"
                           ? "bg-[#1D9E75]"
                           : "bg-gray-600"
                       }`}

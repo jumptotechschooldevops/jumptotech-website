@@ -15,6 +15,7 @@ import {
   Clock,
   ChevronRight,
   Award,
+  ExternalLink,
 } from "lucide-react";
 
 const difficultyColors = {
@@ -24,7 +25,6 @@ const difficultyColors = {
 };
 
 const typeIcons = {
-  video: PlayCircle,
   reading: BookOpen,
   lab: FlaskConical,
 };
@@ -191,9 +191,7 @@ export function ModulePageClient({ module: mod }: Props) {
                           <div className="flex items-center gap-2 shrink-0">
                             <span
                               className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold ${
-                                lecture.type === "video"
-                                  ? "bg-[#185FA5]/15 text-[#185FA5]"
-                                  : lecture.type === "lab"
+                                lecture.type === "lab"
                                   ? "bg-[#1D9E75]/15 text-[#1D9E75]"
                                   : "bg-[var(--muted-bg)] text-[var(--muted)]"
                               }`}
@@ -208,6 +206,16 @@ export function ModulePageClient({ module: mod }: Props) {
                           </div>
                         </div>
                         <p className="text-xs text-[var(--muted)] mt-1 leading-relaxed">{lecture.description}</p>
+                        <a
+                          href={mod.mkdocsUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 mt-2 text-[10px] font-semibold text-[#185FA5] hover:underline"
+                        >
+                          Read full lecture
+                          <ExternalLink size={9} />
+                        </a>
                       </div>
 
                       <ChevronRight
