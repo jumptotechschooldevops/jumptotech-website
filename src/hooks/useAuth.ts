@@ -1,31 +1,36 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
-const AUTH_KEY = "jtt_auth";
+import { supabase } from "@/lib/supabase";
+import type { User } from "@supabase/supabase-js";
 
 export function useAuth() {
-  const [loggedIn, setLoggedIn] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
-    setLoggedIn(localStorage.getItem(AUTH_KEY) === "true");
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+      setMounted(true);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = (username: string, password: string): boolean => {
-    if (username === "student" && password === "jumptotech2026") {
-      localStorage.setItem(AUTH_KEY, "true");
-      setLoggedIn(true);
-      return true;
-    }
-    return false;
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
   };
 
-  const logout = () => {
-    localStorage.removeItem(AUTH_KEY);
-    setLoggedIn(false);
+  return {
+    user,
+    loggedIn: !!user,
+    displayName: user?.user_metadata?.full_name as string | undefined,
+    mounted,
+    logout,
   };
-
-  return { loggedIn, login, logout, mounted };
 }

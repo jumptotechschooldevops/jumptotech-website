@@ -1,34 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ThemeToggle } from "./ThemeToggle";
 import { Menu, X, Rocket, Lock, LogOut } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-function useAuth() {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-    setLoggedIn(localStorage.getItem("jtt_auth") === "true");
-  }, []);
-
-  const logout = () => {
-    localStorage.removeItem("jtt_auth");
-    setLoggedIn(false);
-  };
-
-  return { loggedIn, logout, mounted };
-}
+import { useAuth } from "@/hooks/useAuth";
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const { lang, toggleLang } = useLanguage();
-  const { loggedIn, logout, mounted } = useAuth();
+  const { loggedIn, displayName, mounted, logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    setOpen(false);
+    router.push("/");
+  };
 
   const links = [
     { href: "/", label: lang === "ru" ? "Главная" : "Home" },
@@ -84,10 +75,10 @@ export function Navbar() {
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#1D9E75]/10 text-[#1D9E75] text-sm font-medium hover:bg-[#1D9E75]/20 transition-colors"
                 >
                   <Rocket size={14} />
-                  {lang === "ru" ? "Портал" : "My Portal"}
+                  {displayName ? displayName.split(" ")[0] : (lang === "ru" ? "Портал" : "My Portal")}
                 </Link>
                 <button
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="p-2 rounded-lg text-[var(--muted)] hover:bg-[var(--muted-bg)] hover:text-[var(--foreground)] transition-colors"
                   aria-label="Logout"
                 >
@@ -148,10 +139,10 @@ export function Navbar() {
                   onClick={() => setOpen(false)}
                   className="block mx-3 mt-2 px-4 py-2 rounded-lg bg-[#1D9E75]/10 text-[#1D9E75] text-sm font-medium text-center"
                 >
-                  {lang === "ru" ? "Мой портал" : "My Portal"}
+                  {displayName ? displayName : (lang === "ru" ? "Мой портал" : "My Portal")}
                 </Link>
                 <button
-                  onClick={() => { logout(); setOpen(false); }}
+                  onClick={handleLogout}
                   className="block w-full text-left px-3 py-2 rounded-lg text-sm text-[var(--muted)] hover:bg-[var(--muted-bg)]"
                 >
                   {lang === "ru" ? "Выйти" : "Log out"}

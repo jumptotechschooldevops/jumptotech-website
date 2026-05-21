@@ -4,29 +4,29 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock, Rocket, Eye, EyeOff } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    setTimeout(() => {
-      if (username === "student" && password === "jumptotech2026") {
-        localStorage.setItem("jtt_auth", "true");
-        router.push("/modules");
-      } else {
-        setError("Invalid username or password. Please try again.");
-        setLoading(false);
-      }
-    }, 400);
+    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (authError) {
+      setError("Invalid email or password. Please try again.");
+      setLoading(false);
+    } else {
+      router.push("/modules");
+    }
   };
 
   return (
@@ -47,15 +47,15 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">
-                Username
+                Email
               </label>
               <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                autoComplete="username"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
                 required
-                placeholder="Enter your username"
+                placeholder="you@example.com"
                 className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#185FA5]/30 focus:border-[#185FA5] transition-colors text-sm"
               />
             </div>
@@ -100,11 +100,17 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-[var(--border)] text-center">
+          <div className="mt-6 pt-6 border-t border-[var(--border)] text-center space-y-2">
             <p className="text-xs text-[var(--muted)]">
               Not enrolled yet?{" "}
               <Link href="/#register" className="text-[#185FA5] hover:underline font-medium">
                 Register for Batch 4
+              </Link>
+            </p>
+            <p className="text-xs text-[var(--muted)]">
+              Have an account?{" "}
+              <Link href="/register" className="text-[#185FA5] hover:underline font-medium">
+                Sign up for Student Portal
               </Link>
             </p>
           </div>
