@@ -75,7 +75,7 @@ export function Navbar() {
                   className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#1D9E75]/10 text-[#1D9E75] text-sm font-medium hover:bg-[#1D9E75]/20 transition-colors"
                 >
                   <Rocket size={14} />
-                  {displayName ? displayName.split(" ")[0] : (lang === "ru" ? "Портал" : "My Portal")}
+                  {displayName ? `Hi ${displayName.split(" ")[0]}` : (lang === "ru" ? "Портал" : "My Portal")}
                 </Link>
                 <button
                   onClick={handleLogout}
@@ -139,7 +139,7 @@ export function Navbar() {
                   onClick={() => setOpen(false)}
                   className="block mx-3 mt-2 px-4 py-2 rounded-lg bg-[#1D9E75]/10 text-[#1D9E75] text-sm font-medium text-center"
                 >
-                  {displayName ? displayName : (lang === "ru" ? "Мой портал" : "My Portal")}
+                  {displayName ? `Hi ${displayName.split(" ")[0]}` : (lang === "ru" ? "Мой портал" : "My Portal")}
                 </Link>
                 <button
                   onClick={handleLogout}

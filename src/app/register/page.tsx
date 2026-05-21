@@ -32,8 +32,8 @@ export default function RegisterPage() {
       setError("Passwords do not match.");
       return;
     }
-    if (form.password.length < 6) {
-      setError("Password must be at least 6 characters.");
+    if (form.password.length < 8) {
+      setError("Password must be at least 8 characters.");
       return;
     }
 
@@ -73,10 +73,10 @@ export default function RegisterPage() {
           <div className="bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl p-10 shadow-lg">
             <CheckCircle2 size={56} className="text-[#1D9E75] mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-[var(--foreground)] mb-3">
-              Registration Successful!
+              Account Created!
             </h1>
             <p className="text-[var(--muted)] text-sm leading-relaxed mb-6">
-              The instructor will activate your account. You will receive an email once your access is granted.
+              Please check your email to confirm your address, then you can log in.
             </p>
             <Link
               href="/login"
@@ -168,7 +168,7 @@ export default function RegisterPage() {
                   onChange={set("password")}
                   autoComplete="new-password"
                   required
-                  placeholder="Min. 6 characters"
+                  placeholder="Min. 8 characters"
                   className="w-full px-4 py-3 pr-12 rounded-xl border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#185FA5]/30 focus:border-[#185FA5] transition-colors text-sm"
                 />
                 <button
