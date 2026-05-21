@@ -5,6 +5,11 @@ import Image from "next/image";
 import { modules, announcements, discussions, stats } from "@/lib/data";
 import { useAllProgress } from "@/hooks/useProgress";
 import { ModuleCard } from "@/components/ModuleCard";
+import { RegistrationForm } from "@/components/RegistrationForm";
+import { CommunityPhotos } from "@/components/CommunityPhotos";
+import { SuccessStories } from "@/components/SuccessStories";
+import { FAQ } from "@/components/FAQ";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   ArrowRight,
   Users,
@@ -18,6 +23,10 @@ import {
   PlayCircle,
   Rocket,
   TrendingUp,
+  Phone,
+  Calendar,
+  Clock,
+  DollarSign,
 } from "lucide-react";
 
 const tagStyles: Record<string, string> = {
@@ -43,6 +52,7 @@ const latestLectures = [
 
 export default function HomePage() {
   const { getModulePercent, mounted } = useAllProgress();
+  const { lang, t } = useLanguage();
 
   return (
     <div className="bg-[var(--background)]">
@@ -58,32 +68,58 @@ export default function HomePage() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/15 border border-white/25 text-white/90 text-xs font-medium mb-6">
               <span className="w-1.5 h-1.5 rounded-full bg-[#1D9E75] pulse-dot" />
-              New module just launched: Prometheus &amp; Grafana
+              {t("🎓 Batch 4 · June 1, 2026 · Limited spots", "🎓 Набор 4 · 1 июня 2026 · Ограниченные места")}
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] mb-6">
-              Master DevOps{" "}
-              <span className="block text-white/70">from the ground up.</span>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white leading-[1.1] mb-5">
+              {lang === "ru" ? (
+                <>Стань DevOps-инженером{" "}<span className="block text-white/75">за 7 месяцев</span></>
+              ) : (
+                <>Become a DevOps{" "}<span className="block text-white/75">Engineer in 7 Months</span></>
+              )}
             </h1>
 
-            <p className="text-lg sm:text-xl text-white/80 leading-relaxed mb-8 max-w-2xl">
-              Hands-on courses covering Git, Linux, Docker, Kubernetes, Terraform, CI/CD, AWS, and more. Learn by doing with real-world labs and projects used in top tech companies.
+            <p className="text-lg sm:text-xl text-white/80 leading-relaxed mb-6 max-w-2xl">
+              {t(
+                "Hands-on training, real projects, job-ready skills. Join 3 batches of successful graduates.",
+                "Практическое обучение, реальные проекты, навыки для работы. Присоединяйся к 3 выпускам успешных студентов."
+              )}
             </p>
 
+            {/* Price + schedule cards */}
+            <div className="flex flex-wrap gap-3 mb-8">
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/15 border border-white/20 text-white text-sm">
+                <DollarSign size={15} className="text-yellow-300 shrink-0" />
+                <span>
+                  <strong className="text-yellow-300">$700/mo</strong>
+                  {" "}
+                  <span className="text-white/70 text-xs">{t("or $5,000 total", "или $5,000 всего")}</span>
+                </span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/15 border border-white/20 text-white text-sm">
+                <Calendar size={15} className="text-white/70 shrink-0" />
+                <span>{t("Mon–Fri · starts June 1", "Пн–Пт · с 1 июня")}</span>
+              </div>
+              <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/15 border border-white/20 text-white text-sm">
+                <Clock size={15} className="text-white/70 shrink-0" />
+                <span>{t("6PM–9PM CST", "18:00–21:00 CST")}</span>
+              </div>
+            </div>
+
             <div className="flex flex-wrap gap-3">
-              <Link
-                href="/modules"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-[#185FA5] font-semibold hover:bg-white/90 transition-colors"
+              <a
+                href="#register"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-[#185FA5] font-bold hover:bg-white/90 transition-colors"
               >
                 <Rocket size={18} />
-                Start Learning Free
-              </Link>
+                {t("Register Now →", "Записаться →")}
+              </a>
               <a
-                href="#modules"
+                href="tel:8728065906"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/15 text-white font-semibold border border-white/25 hover:bg-white/25 transition-colors"
               >
-                Browse Modules
-                <ArrowRight size={16} />
+                <Phone size={16} />
+                {t("Call Us: 872-806-5906", "Позвонить: 872-806-5906")}
               </a>
             </div>
 
@@ -100,10 +136,14 @@ export default function HomePage() {
                 ))}
               </div>
               <div className="text-white/80 text-sm">
-                <strong className="text-white">1,847 students</strong> already enrolled
-                <span className="flex items-center gap-1 text-yellow-300 font-medium">
+                <strong className="text-white">
+                  {t("3 batches completed", "3 завершённых группы")}
+                </strong>
+                {" · "}
+                {t("50+ graduates", "50+ выпускников")}
+                <span className="flex items-center gap-1 text-yellow-300 font-medium mt-0.5">
                   <Star size={13} fill="currentColor" />
-                  4.9 average rating
+                  {t("4.9 average rating", "рейтинг 4.9")}
                 </span>
               </div>
             </div>
@@ -116,12 +156,12 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6">
             {[
-              { icon: Users, value: stats.students.toLocaleString(), label: "Students" },
-              { icon: BookOpen, value: stats.modules, label: "Modules" },
-              { icon: PlayCircle, value: stats.lectures, label: "Lectures" },
-              { icon: FlaskConical, value: stats.labs, label: "Labs" },
-              { icon: TrendingUp, value: `${stats.completionRate}%`, label: "Completion" },
-              { icon: Star, value: stats.satisfaction, label: "Rating" },
+              { icon: Users, value: stats.students.toLocaleString(), label: t("Students", "Студентов") },
+              { icon: BookOpen, value: stats.modules, label: t("Modules", "Модулей") },
+              { icon: PlayCircle, value: stats.lectures, label: t("Lectures", "Лекций") },
+              { icon: FlaskConical, value: stats.labs, label: t("Labs", "Лабораторных") },
+              { icon: TrendingUp, value: `${stats.completionRate}%`, label: t("Completion", "Завершение") },
+              { icon: Star, value: stats.satisfaction, label: t("Rating", "Рейтинг") },
             ].map(({ icon: Icon, value, label }) => (
               <div key={label} className="flex flex-col items-center text-center gap-1">
                 <Icon size={20} className="text-[#185FA5] mb-1" />
@@ -137,16 +177,18 @@ export default function HomePage() {
       <section id="modules" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-[var(--foreground)]">All Modules</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold text-[var(--foreground)]">
+              {t("All Modules", "Все модули")}
+            </h2>
             <p className="text-[var(--muted)] mt-1">
-              {stats.modules} modules • {stats.lectures} lectures • {stats.labs} hands-on labs
+              {stats.modules} {t("modules", "модулей")} · {stats.lectures} {t("lectures", "лекций")} · {stats.labs} {t("hands-on labs", "практических лабораторных")}
             </p>
           </div>
           <Link
             href="/modules"
             className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-[#185FA5] hover:underline"
           >
-            View all <ArrowRight size={14} />
+            {t("View all", "Смотреть все")} <ArrowRight size={14} />
           </Link>
         </div>
 
@@ -166,14 +208,18 @@ export default function HomePage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-[var(--foreground)]">Latest Lectures</h2>
-              <p className="text-[var(--muted)] mt-1">Recently added &amp; updated content</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-[var(--foreground)]">
+                {t("Latest Lectures", "Последние лекции")}
+              </h2>
+              <p className="text-[var(--muted)] mt-1">
+                {t("Recently added & updated content", "Недавно добавленный и обновлённый контент")}
+              </p>
             </div>
             <Link
               href="/modules"
               className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-[#185FA5] hover:underline"
             >
-              Browse all <ArrowRight size={14} />
+              {t("Browse all", "Смотреть все")} <ArrowRight size={14} />
             </Link>
           </div>
 
@@ -204,9 +250,7 @@ export default function HomePage() {
                   <div className="absolute top-2 right-2">
                     <span
                       className={`px-2 py-0.5 rounded-md text-xs font-semibold text-white ${
-                        lecture.type === "lab"
-                          ? "bg-[#1D9E75]"
-                          : "bg-gray-600"
+                        lecture.type === "lab" ? "bg-[#1D9E75]" : "bg-gray-600"
                       }`}
                     >
                       {lecture.type}
@@ -225,6 +269,15 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* REGISTRATION FORM */}
+      <RegistrationForm />
+
+      {/* COMMUNITY PHOTOS */}
+      <CommunityPhotos />
+
+      {/* SUCCESS STORIES */}
+      <SuccessStories />
+
       {/* ANNOUNCEMENTS + DISCUSSIONS */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -232,7 +285,9 @@ export default function HomePage() {
           <div>
             <div className="flex items-center gap-2 mb-6">
               <Bell size={20} className="text-[#185FA5]" />
-              <h2 className="text-xl font-bold text-[var(--foreground)]">Announcements</h2>
+              <h2 className="text-xl font-bold text-[var(--foreground)]">
+                {t("Announcements", "Объявления")}
+              </h2>
             </div>
             <div className="space-y-4">
               {announcements.map((ann) => (
@@ -267,7 +322,9 @@ export default function HomePage() {
           <div>
             <div className="flex items-center gap-2 mb-6">
               <MessageSquare size={20} className="text-[#1D9E75]" />
-              <h2 className="text-xl font-bold text-[var(--foreground)]">Student Discussions</h2>
+              <h2 className="text-xl font-bold text-[var(--foreground)]">
+                {t("Student Discussions", "Обсуждения студентов")}
+              </h2>
             </div>
             <div className="space-y-4">
               {discussions.map((disc) => (
@@ -286,7 +343,10 @@ export default function HomePage() {
                       <div className="flex items-center justify-between gap-2 mb-1">
                         <span className="text-sm font-semibold text-[var(--foreground)]">{disc.author}</span>
                         <span className="text-[10px] text-[var(--muted)] shrink-0">
-                          {new Date(disc.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                          {new Date(disc.date).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                          })}
                         </span>
                       </div>
                       <span className="inline-block px-2 py-0.5 rounded-md bg-[#185FA5]/10 text-[#185FA5] text-[10px] font-medium mb-1.5">
@@ -306,6 +366,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* FAQ */}
+      <FAQ />
+
       {/* CTA BANNER */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
         <div className="rounded-2xl hero-gradient p-8 sm:p-12 text-center relative overflow-hidden">
@@ -318,18 +381,33 @@ export default function HomePage() {
           <div className="relative">
             <Trophy size={40} className="text-yellow-300 mx-auto mb-4" />
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-3">
-              Ready to level up your DevOps career?
+              {t(
+                "Ready to launch your DevOps career?",
+                "Готовы начать карьеру в DevOps?"
+              )}
             </h2>
             <p className="text-white/80 mb-6 max-w-xl mx-auto">
-              Join 1,847 students learning production-grade DevOps skills. Start with any module — it&apos;s completely free.
+              {t(
+                "Batch 4 starts June 1, 2026. Only a few spots left. $700/month payment plan available.",
+                "Набор 4 начинается 1 июня 2026. Осталось несколько мест. Оплата от $700/месяц."
+              )}
             </p>
-            <Link
-              href="/modules"
-              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-white text-[#185FA5] font-bold hover:bg-white/90 transition-colors"
-            >
-              <Rocket size={18} />
-              Start Learning Now
-            </Link>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <a
+                href="#register"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-white text-[#185FA5] font-bold hover:bg-white/90 transition-colors"
+              >
+                <Rocket size={18} />
+                {t("Register Now", "Записаться")}
+              </a>
+              <a
+                href="tel:8728065906"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-white/15 text-white font-semibold border border-white/25 hover:bg-white/25 transition-colors"
+              >
+                <Phone size={16} />
+                872-806-5906
+              </a>
+            </div>
           </div>
         </div>
       </section>

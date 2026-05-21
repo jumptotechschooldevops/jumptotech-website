@@ -3,16 +3,36 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ThemeToggle } from "./ThemeToggle";
-import { Menu, X, Rocket } from "lucide-react";
-import { useState } from "react";
+import { Menu, X, Rocket, Lock, LogOut } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+
+function useAuth() {
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    setLoggedIn(localStorage.getItem("jtt_auth") === "true");
+  }, []);
+
+  const logout = () => {
+    localStorage.removeItem("jtt_auth");
+    setLoggedIn(false);
+  };
+
+  return { loggedIn, logout, mounted };
+}
 
 export function Navbar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const { lang, toggleLang } = useLanguage();
+  const { loggedIn, logout, mounted } = useAuth();
 
   const links = [
-    { href: "/", label: "Home" },
-    { href: "/modules", label: "Modules" },
+    { href: "/", label: lang === "ru" ? "Главная" : "Home" },
+    { href: "/modules", label: lang === "ru" ? "Модули" : "Modules" },
   ];
 
   return (
@@ -32,7 +52,7 @@ export function Navbar() {
           </Link>
 
           {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-4">
             {links.map((l) => (
               <Link
                 key={l.href}
@@ -46,17 +66,53 @@ export function Navbar() {
                 {l.label}
               </Link>
             ))}
-            <ThemeToggle />
-            <Link
-              href="/modules"
-              className="px-4 py-2 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:bg-[var(--primary-dark)] transition-colors"
+
+            <button
+              onClick={toggleLang}
+              className="px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-[var(--border)] text-[var(--muted)] hover:border-[var(--primary)] hover:text-[var(--primary)] transition-colors"
+              aria-label="Toggle language"
             >
-              Start Learning
-            </Link>
+              {lang === "en" ? "RU" : "EN"}
+            </button>
+
+            <ThemeToggle />
+
+            {mounted && loggedIn ? (
+              <div className="flex items-center gap-2">
+                <Link
+                  href="/modules"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#1D9E75]/10 text-[#1D9E75] text-sm font-medium hover:bg-[#1D9E75]/20 transition-colors"
+                >
+                  <Rocket size={14} />
+                  {lang === "ru" ? "Портал" : "My Portal"}
+                </Link>
+                <button
+                  onClick={logout}
+                  className="p-2 rounded-lg text-[var(--muted)] hover:bg-[var(--muted-bg)] hover:text-[var(--foreground)] transition-colors"
+                  aria-label="Logout"
+                >
+                  <LogOut size={15} />
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[var(--primary)] text-white text-sm font-medium hover:bg-[var(--primary-dark)] transition-colors"
+              >
+                <Lock size={14} />
+                {lang === "ru" ? "Войти" : "Student Portal"}
+              </Link>
+            )}
           </div>
 
           {/* Mobile */}
           <div className="flex md:hidden items-center gap-2">
+            <button
+              onClick={toggleLang}
+              className="px-2 py-1 rounded-md text-xs font-semibold border border-[var(--border)] text-[var(--muted)]"
+            >
+              {lang === "en" ? "RU" : "EN"}
+            </button>
             <ThemeToggle />
             <button
               onClick={() => setOpen(!open)}
@@ -85,13 +141,32 @@ export function Navbar() {
                 {l.label}
               </Link>
             ))}
-            <Link
-              href="/modules"
-              onClick={() => setOpen(false)}
-              className="block mx-3 mt-2 px-4 py-2 rounded-lg bg-[var(--primary)] text-white text-sm font-medium text-center"
-            >
-              Start Learning
-            </Link>
+            {mounted && loggedIn ? (
+              <>
+                <Link
+                  href="/modules"
+                  onClick={() => setOpen(false)}
+                  className="block mx-3 mt-2 px-4 py-2 rounded-lg bg-[#1D9E75]/10 text-[#1D9E75] text-sm font-medium text-center"
+                >
+                  {lang === "ru" ? "Мой портал" : "My Portal"}
+                </Link>
+                <button
+                  onClick={() => { logout(); setOpen(false); }}
+                  className="block w-full text-left px-3 py-2 rounded-lg text-sm text-[var(--muted)] hover:bg-[var(--muted-bg)]"
+                >
+                  {lang === "ru" ? "Выйти" : "Log out"}
+                </button>
+              </>
+            ) : (
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="flex items-center justify-center gap-1.5 mx-3 mt-2 px-4 py-2 rounded-lg bg-[var(--primary)] text-white text-sm font-medium"
+              >
+                <Lock size={14} />
+                {lang === "ru" ? "Войти" : "Student Portal"}
+              </Link>
+            )}
           </div>
         )}
       </div>
