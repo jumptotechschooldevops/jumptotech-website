@@ -137,10 +137,6 @@ export default function LoginPage() {
               </p>
             </div>
 
-            <div className="mb-5 bg-blue-500/10 border border-blue-500/20 rounded-xl px-4 py-3 text-xs text-blue-600 dark:text-blue-400">
-              <span className="font-medium">New users:</span> check your email for a confirmation link before logging in.
-            </div>
-
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">
