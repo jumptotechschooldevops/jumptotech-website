@@ -1,32 +1,38 @@
 "use client";
 
+import Image from "next/image";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { ImageIcon } from "lucide-react";
 
 const photos = [
   {
+    src: "https://images.unsplash.com/photo-1521673461164-de300ebcfb17?w=600",
     captionEn: "Skydiving with Batch 2",
     captionRu: "Прыжок с парашютом с группой 2",
-    gradient: "from-blue-500 to-cyan-400",
-    emoji: "🪂",
   },
   {
+    src: "https://images.unsplash.com/photo-1529543544282-ea669407fca3?w=600",
     captionEn: "Graduation Dinner",
     captionRu: "Выпускной ужин",
-    gradient: "from-purple-500 to-pink-400",
-    emoji: "🎓",
   },
   {
+    src: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600",
     captionEn: "Cooking Together",
     captionRu: "Готовим вместе",
-    gradient: "from-orange-400 to-yellow-300",
-    emoji: "👨‍🍳",
   },
   {
+    src: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600",
     captionEn: "Community Events",
     captionRu: "Мероприятия сообщества",
-    gradient: "from-green-500 to-emerald-400",
-    emoji: "🤝",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=600",
+    captionEn: "Graduation Day",
+    captionRu: "День выпуска",
+  },
+  {
+    src: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600",
+    captionEn: "Team Building",
+    captionRu: "Тимбилдинг",
   },
 ];
 
@@ -47,21 +53,21 @@ export function CommunityPhotos() {
         </p>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {photos.map((photo, i) => (
           <div
             key={i}
-            className={`relative rounded-2xl overflow-hidden aspect-[4/3] bg-gradient-to-br ${photo.gradient} card-hover cursor-default`}
+            className="relative rounded-2xl overflow-hidden aspect-[4/3] cursor-default"
           >
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-              <span className="text-5xl">{photo.emoji}</span>
-              <div className="flex items-center gap-1 text-white/60 text-xs">
-                <ImageIcon size={12} />
-                <span>{t("Photo coming soon", "Фото скоро")}</span>
-              </div>
-            </div>
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3">
-              <p className="text-white text-xs font-semibold text-center">
+            <Image
+              src={photo.src}
+              alt={t(photo.captionEn, photo.captionRu)}
+              fill
+              className="object-cover"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            />
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent pt-8 pb-3 px-3">
+              <p className="text-white text-sm font-semibold text-center drop-shadow">
                 {t(photo.captionEn, photo.captionRu)}
               </p>
             </div>

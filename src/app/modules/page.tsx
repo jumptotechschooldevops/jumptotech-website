@@ -4,40 +4,29 @@ import { modules } from "@/lib/data";
 import { ModuleCard } from "@/components/ModuleCard";
 import { useAllProgress } from "@/hooks/useProgress";
 import { useAuth } from "@/hooks/useAuth";
-import { BookOpen, FlaskConical, Clock, Lock } from "lucide-react";
-import Link from "next/link";
+import { BookOpen, FlaskConical, Clock } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function ModulesPage() {
   const { getModulePercent, mounted } = useAllProgress();
   const { loggedIn, mounted: authMounted } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (authMounted && !loggedIn) {
+      router.replace("/login");
+    }
+  }, [authMounted, loggedIn, router]);
 
   const totalLectures = modules.reduce((s, m) => s + m.lectureCount, 0);
   const totalLabs = modules.reduce((s, m) => s + m.labCount, 0);
   const totalHours = modules.reduce((s, m) => s + m.totalHours, 0);
 
+  if (!authMounted || !loggedIn) return null;
+
   return (
     <div className="bg-[var(--background)]">
-      {/* Auth prompt banner */}
-      {authMounted && !loggedIn && (
-        <div className="bg-[#185FA5]/8 border-b border-[#185FA5]/20">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-2 text-sm text-[var(--foreground)]">
-              <Lock size={15} className="text-[#185FA5] shrink-0" />
-              <span>
-                <strong>You&apos;re previewing course content.</strong>
-                {" "}Sign in to track your progress and unlock all features.
-              </span>
-            </div>
-            <Link
-              href="/login"
-              className="shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-[#185FA5] text-white text-sm font-medium hover:bg-[#0f4a8a] transition-colors"
-            >
-              <Lock size={13} />
-              Sign In
-            </Link>
-          </div>
-        </div>
-      )}
 
       {/* Header */}
       <div className="bg-[var(--card-bg)] border-b border-[var(--border)]">

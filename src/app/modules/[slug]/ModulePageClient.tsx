@@ -4,7 +4,10 @@ import Image from "next/image";
 import Link from "next/link";
 import { Module } from "@/lib/data";
 import { useProgress } from "@/hooks/useProgress";
+import { useAuth } from "@/hooks/useAuth";
 import { GiscusComments } from "@/components/GiscusComments";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -35,6 +38,16 @@ interface Props {
 
 export function ModulePageClient({ module: mod }: Props) {
   const { mounted, completedLectures, completedLabs, toggleLecture, toggleLab } = useProgress(mod.id);
+  const { loggedIn, mounted: authMounted } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (authMounted && !loggedIn) {
+      router.replace("/login");
+    }
+  }, [authMounted, loggedIn, router]);
+
+  if (!authMounted || !loggedIn) return null;
 
   const totalItems = mod.lectureCount + mod.labCount;
   const completedCount = completedLectures.length + completedLabs.length;

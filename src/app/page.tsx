@@ -27,7 +27,9 @@ import {
   Calendar,
   Clock,
   DollarSign,
+  Lock,
 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const tagStyles: Record<string, string> = {
   new: "bg-[#1D9E75]/15 text-[#1D9E75] border-[#1D9E75]/25",
@@ -53,6 +55,7 @@ const latestLectures = [
 export default function HomePage() {
   const { getModulePercent, mounted } = useAllProgress();
   const { lang, t } = useLanguage();
+  const { loggedIn, mounted: authMounted } = useAuth();
 
   return (
     <div className="bg-[var(--background)]">
@@ -193,13 +196,48 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {modules.map((mod) => (
-            <ModuleCard
-              key={mod.id}
-              module={mod}
-              progress={mounted ? getModulePercent(mod.id, mod.lectureCount, mod.labCount) : 0}
-            />
-          ))}
+          {modules.map((mod, idx) => {
+            const isLocked = authMounted && !loggedIn && idx >= 2;
+            if (isLocked) {
+              return (
+                <Link
+                  key={mod.id}
+                  href="/login"
+                  className="group block rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--card-bg)] relative"
+                >
+                  <div className="relative h-44 overflow-hidden">
+                    <Image
+                      src={mod.coverImage}
+                      alt={mod.title}
+                      fill
+                      className="object-cover blur-sm scale-105"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                    />
+                    <div className="absolute inset-0 bg-black/50" />
+                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
+                      <div className="w-10 h-10 rounded-full bg-white/15 border border-white/30 flex items-center justify-center">
+                        <Lock size={18} className="text-white" />
+                      </div>
+                      <span className="text-white text-xs font-semibold bg-black/40 px-3 py-1 rounded-full">
+                        {t("Login to access", "Войдите для доступа")}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-4 space-y-3 opacity-40 select-none">
+                    <p className="text-sm font-semibold text-[var(--foreground)]">{mod.title}</p>
+                    <p className="text-xs text-[var(--muted)] line-clamp-2">{mod.description}</p>
+                  </div>
+                </Link>
+              );
+            }
+            return (
+              <ModuleCard
+                key={mod.id}
+                module={mod}
+                progress={mounted ? getModulePercent(mod.id, mod.lectureCount, mod.labCount) : 0}
+              />
+            );
+          })}
         </div>
       </section>
 
