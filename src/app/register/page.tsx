@@ -39,7 +39,7 @@ export default function RegisterPage() {
 
     setLoading(true);
 
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
@@ -56,11 +56,17 @@ export default function RegisterPage() {
       return;
     }
 
-    await fetch("/api/notify-instructor", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName: form.fullName, email: form.email, phone: form.phone }),
-    });
+    if (signUpData.user) {
+      await supabase.from("profiles").upsert({
+        id: signUpData.user.id,
+        full_name: form.fullName,
+        phone: form.phone,
+      });
+    }
+
+    const instructorEmail = process.env.NEXT_PUBLIC_INSTRUCTOR_EMAIL ?? "aisalkynaidarova8@gmail.com";
+    const body = `New student signed up:%0A%0AName: ${encodeURIComponent(form.fullName)}%0AEmail: ${encodeURIComponent(form.email)}%0APhone: ${encodeURIComponent(form.phone)}`;
+    window.open(`mailto:${instructorEmail}?subject=New%20Student%20Registration%20%E2%80%94%20JumpToTech&body=${body}`);
 
     setSuccess(true);
     setLoading(false);
