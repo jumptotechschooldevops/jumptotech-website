@@ -1,22 +1,22 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
-import { Module } from "@/lib/data";
+import { Module, Lecture } from "@/lib/data";
 import { useProgress } from "@/hooks/useProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { GiscusComments } from "@/components/GiscusComments";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import {
   ArrowLeft,
   CheckCircle2,
   Circle,
   PlayCircle,
-  BookOpen,
   FlaskConical,
   Clock,
   ChevronRight,
+  ChevronDown,
   Award,
   ExternalLink,
 } from "lucide-react";
@@ -27,10 +27,14 @@ const difficultyColors = {
   advanced: "bg-orange-500/15 text-orange-500 border-orange-500/25",
 };
 
-const typeIcons = {
-  reading: BookOpen,
-  lab: FlaskConical,
-};
+interface DbLecture {
+  id: string;
+  title: string;
+  description: string | null;
+  duration: string;
+  type: string;
+  order_index: number;
+}
 
 interface Props {
   module: Module;
@@ -41,6 +45,32 @@ export function ModulePageClient({ module: mod }: Props) {
   const { loggedIn, mounted: authMounted } = useAuth();
   const router = useRouter();
 
+  const [dbLectures, setDbLectures] = useState<Lecture[]>([]);
+  const [expandedLectures, setExpandedLectures] = useState<Set<string>>(new Set());
+  const [sidebarLecturesOpen, setSidebarLecturesOpen] = useState(true);
+  const [sidebarLabsOpen, setSidebarLabsOpen] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from("lectures")
+      .select("id, title, description, duration, type, order_index")
+      .eq("module_slug", mod.slug)
+      .order("order_index", { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setDbLectures(
+            (data as DbLecture[]).map((l) => ({
+              id: l.id,
+              title: l.title,
+              description: l.description ?? "",
+              duration: l.duration,
+              type: (["lab", "video"].includes(l.type) ? l.type : "reading") as "reading" | "lab" | "video",
+            }))
+          );
+        }
+      });
+  }, [mod.slug]);
+
   useEffect(() => {
     if (authMounted && !loggedIn) {
       router.replace("/login");
@@ -49,22 +79,31 @@ export function ModulePageClient({ module: mod }: Props) {
 
   if (!authMounted || !loggedIn) return null;
 
-  const totalItems = mod.lectureCount + mod.labCount;
+  const dbLectureIds = new Set(dbLectures.map((l) => l.id));
+  const displayLectures = [...dbLectures, ...mod.lectures];
+  const displayLectureCount = displayLectures.length;
+  const totalItems = displayLectureCount + mod.labCount;
   const completedCount = completedLectures.length + completedLabs.length;
   const progressPct = totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
   const isComplete = progressPct === 100;
+
+  const toggleExpanded = (id: string) => {
+    setExpandedLectures((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   return (
     <div className="bg-[var(--background)]">
       {/* Hero cover */}
       <div className="relative h-64 sm:h-80 overflow-hidden">
-        <Image
+        <img
           src={mod.coverImage}
           alt={mod.title}
-          fill
-          className="object-cover"
-          priority
-          sizes="100vw"
+          className="absolute inset-0 w-full h-full object-cover"
         />
         <div
           className="absolute inset-0"
@@ -94,7 +133,7 @@ export function ModulePageClient({ module: mod }: Props) {
             <div className="flex flex-wrap gap-4 text-sm text-[var(--muted)]">
               <span className="flex items-center gap-1.5">
                 <PlayCircle size={15} className="text-[#185FA5]" />
-                {mod.lectureCount} lectures
+                {displayLectureCount} lectures
               </span>
               <span className="flex items-center gap-1.5">
                 <FlaskConical size={15} className="text-[#1D9E75]" />
@@ -161,80 +200,91 @@ export function ModulePageClient({ module: mod }: Props) {
                 <PlayCircle size={20} className="text-[#185FA5]" />
                 <h2 className="text-xl font-bold text-[var(--foreground)]">Lectures</h2>
                 <span className="px-2 py-0.5 rounded-md bg-[var(--muted-bg)] text-xs font-medium text-[var(--muted)]">
-                  {mod.lectureCount}
+                  {displayLectureCount}
                 </span>
               </div>
 
               <div className="space-y-2">
-                {mod.lectures.map((lecture, idx) => {
+                {displayLectures.map((lecture, idx) => {
                   const isCompleted = mounted && completedLectures.includes(lecture.id);
-                  const TypeIcon = typeIcons[lecture.type];
+                  const isExpanded = expandedLectures.has(lecture.id);
                   return (
                     <div
                       key={lecture.id}
-                      className={`group flex items-start gap-3 p-4 rounded-xl border transition-all cursor-pointer ${
+                      className={`rounded-xl border transition-all ${
                         isCompleted
                           ? "border-[#1D9E75]/30 bg-[#1D9E75]/5"
-                          : "border-[var(--border)] bg-[var(--card-bg)] hover:border-[#185FA5]/40 hover:bg-[#185FA5]/5"
+                          : "border-[var(--border)] bg-[var(--card-bg)]"
                       }`}
-                      onClick={() => mounted && toggleLecture(lecture.id)}
                     >
-                      {/* Number / check */}
-                      <div className="flex-shrink-0 mt-0.5">
-                        {isCompleted ? (
-                          <CheckCircle2 size={20} className="text-[#1D9E75]" />
-                        ) : (
-                          <div className="w-5 h-5 rounded-full border-2 border-[var(--border)] flex items-center justify-center">
-                            <span className="text-[10px] text-[var(--muted)] font-bold">{idx + 1}</span>
-                          </div>
-                        )}
-                      </div>
+                      <div
+                        className="flex items-start gap-3 p-4 cursor-pointer hover:bg-[#185FA5]/5 rounded-xl transition-colors"
+                        onClick={() => toggleExpanded(lecture.id)}
+                      >
+                        {/* Number / check — click only toggles completion */}
+                        <div
+                          className="flex-shrink-0 mt-0.5"
+                          onClick={(e) => { e.stopPropagation(); mounted && toggleLecture(lecture.id); }}
+                        >
+                          {isCompleted ? (
+                            <CheckCircle2 size={20} className="text-[#1D9E75]" />
+                          ) : (
+                            <div className="w-5 h-5 rounded-full border-2 border-[var(--border)] flex items-center justify-center hover:border-[#185FA5] transition-colors">
+                              <span className="text-[10px] text-[var(--muted)] font-bold">{idx + 1}</span>
+                            </div>
+                          )}
+                        </div>
 
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <p
-                            className={`text-sm font-semibold leading-snug ${
-                              isCompleted
-                                ? "line-through text-[var(--muted)]"
-                                : "text-[var(--foreground)]"
-                            }`}
-                          >
-                            {lecture.title}
-                          </p>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span
-                              className={`flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold ${
-                                lecture.type === "lab"
-                                  ? "bg-[#1D9E75]/15 text-[#1D9E75]"
-                                  : "bg-[var(--muted-bg)] text-[var(--muted)]"
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-2">
+                            <p
+                              className={`text-sm font-semibold leading-snug ${
+                                isCompleted
+                                  ? "line-through text-[var(--muted)]"
+                                  : "text-[var(--foreground)]"
                               }`}
                             >
-                              <TypeIcon size={10} />
-                              {lecture.type}
-                            </span>
-                            <span className="text-xs text-[var(--muted)] flex items-center gap-0.5">
-                              <Clock size={11} />
-                              {lecture.duration}
-                            </span>
+                              {lecture.title}
+                            </p>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {dbLectureIds.has(lecture.id) && (
+                                <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[#1D9E75]/15 text-[#1D9E75] border border-[#1D9E75]/30">
+                                  New
+                                </span>
+                              )}
+                              <ChevronDown
+                                size={14}
+                                className={`text-[var(--muted)] transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                              />
+                            </div>
                           </div>
+                          <p className="text-xs text-[var(--muted)] mt-1 leading-relaxed">{lecture.description}</p>
                         </div>
-                        <p className="text-xs text-[var(--muted)] mt-1 leading-relaxed">{lecture.description}</p>
-                        <a
-                          href={mod.mkdocsUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1 mt-2 text-[10px] font-semibold text-[#185FA5] hover:underline"
-                        >
-                          Read full lecture
-                          <ExternalLink size={9} />
-                        </a>
                       </div>
 
-                      <ChevronRight
-                        size={14}
-                        className="shrink-0 text-[var(--muted)] opacity-0 group-hover:opacity-100 transition-opacity mt-1"
-                      />
+                      {isExpanded && (
+                        <div className="px-4 pb-4 ml-8">
+                          {lecture.subtopics && lecture.subtopics.length > 0 && (
+                            <ul className="space-y-1.5 mb-3">
+                              {lecture.subtopics.map((topic) => (
+                                <li key={topic} className="flex items-center gap-2 text-xs text-[var(--muted)]">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-[#185FA5]/50 shrink-0" />
+                                  {topic}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                          <a
+                            href={mod.mkdocsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#185FA5] hover:underline"
+                          >
+                            Read full lecture
+                            <ExternalLink size={9} />
+                          </a>
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -277,19 +327,13 @@ export function ModulePageClient({ module: mod }: Props) {
                               isCompleted ? "line-through text-[var(--muted)]" : "text-[var(--foreground)]"
                             }`}
                           >
-                            Lab {idx + 1}: {lab.title}
+                            Lab {idx + 1} — {lab.title}
                           </p>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span
-                              className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${difficultyColors[lab.difficulty]}`}
-                            >
-                              {lab.difficulty}
-                            </span>
-                            <span className="text-xs text-[var(--muted)] flex items-center gap-0.5">
-                              <Clock size={11} />
-                              {lab.duration}
-                            </span>
-                          </div>
+                          <span
+                            className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border shrink-0 ${difficultyColors[lab.difficulty]}`}
+                          >
+                            {lab.difficulty}
+                          </span>
                         </div>
                         <p className="text-xs text-[var(--muted)] leading-relaxed">{lab.description}</p>
                       </div>
@@ -310,26 +354,24 @@ export function ModulePageClient({ module: mod }: Props) {
               <h3 className="font-bold text-[var(--foreground)] mb-4">Your Progress</h3>
 
               <div className="space-y-3 mb-4">
-                {/* Lectures progress */}
                 <div>
                   <div className="flex justify-between text-xs mb-1.5">
                     <span className="text-[var(--muted)]">Lectures</span>
                     <span className="font-semibold text-[#185FA5]">
-                      {mounted ? completedLectures.length : 0}/{mod.lectureCount}
+                      {mounted ? completedLectures.length : 0}/{displayLectureCount}
                     </span>
                   </div>
                   <div className="h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
                     <div
                       className="h-full bg-[#185FA5] rounded-full transition-all duration-500"
                       style={{
-                        width: mounted
-                          ? `${Math.round((completedLectures.length / mod.lectureCount) * 100)}%`
+                        width: mounted && displayLectureCount > 0
+                          ? `${Math.round((completedLectures.length / displayLectureCount) * 100)}%`
                           : "0%",
                       }}
                     />
                   </div>
                 </div>
-                {/* Labs progress */}
                 <div>
                   <div className="flex justify-between text-xs mb-1.5">
                     <span className="text-[var(--muted)]">Labs</span>
@@ -341,7 +383,7 @@ export function ModulePageClient({ module: mod }: Props) {
                     <div
                       className="h-full bg-[#1D9E75] rounded-full transition-all duration-500"
                       style={{
-                        width: mounted
+                        width: mounted && mod.labCount > 0
                           ? `${Math.round((completedLabs.length / mod.labCount) * 100)}%`
                           : "0%",
                       }}
@@ -372,12 +414,75 @@ export function ModulePageClient({ module: mod }: Props) {
               </p>
             </div>
 
+            {/* Contents navigation */}
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-5">
+              <h3 className="font-bold text-[var(--foreground)] mb-3">Contents</h3>
+
+              {/* Lectures section */}
+              <div className="mb-1">
+                <button
+                  className="flex items-center justify-between w-full py-2 text-sm font-semibold text-[var(--foreground)] hover:text-[#185FA5] transition-colors"
+                  onClick={() => setSidebarLecturesOpen(!sidebarLecturesOpen)}
+                >
+                  <span className="flex items-center gap-2">
+                    <PlayCircle size={13} className="text-[#185FA5]" />
+                    Lectures
+                    <span className="text-xs text-[var(--muted)] font-normal">({displayLectureCount})</span>
+                  </span>
+                  <ChevronDown
+                    size={13}
+                    className={`transition-transform duration-200 ${sidebarLecturesOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {sidebarLecturesOpen && (
+                  <div className="mt-1 space-y-0.5 pl-1">
+                    {displayLectures.map((lecture, idx) => (
+                      <div key={lecture.id} className="flex items-start gap-1.5 py-0.5">
+                        <span className="text-[10px] text-[var(--muted)] w-5 text-right shrink-0 pt-px">{idx + 1}.</span>
+                        <span className="text-xs text-[var(--muted)] leading-tight">{lecture.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="h-px bg-[var(--border)] my-2" />
+
+              {/* Labs section */}
+              <div>
+                <button
+                  className="flex items-center justify-between w-full py-2 text-sm font-semibold text-[var(--foreground)] hover:text-[#1D9E75] transition-colors"
+                  onClick={() => setSidebarLabsOpen(!sidebarLabsOpen)}
+                >
+                  <span className="flex items-center gap-2">
+                    <FlaskConical size={13} className="text-[#1D9E75]" />
+                    Labs
+                    <span className="text-xs text-[var(--muted)] font-normal">({mod.labCount})</span>
+                  </span>
+                  <ChevronDown
+                    size={13}
+                    className={`transition-transform duration-200 ${sidebarLabsOpen ? "rotate-180" : ""}`}
+                  />
+                </button>
+                {sidebarLabsOpen && (
+                  <div className="mt-1 space-y-0.5 pl-1">
+                    {mod.labs.map((lab, idx) => (
+                      <div key={lab.id} className="flex items-start gap-1.5 py-0.5">
+                        <span className="text-[10px] text-[var(--muted)] w-5 text-right shrink-0 pt-px">{idx + 1}.</span>
+                        <span className="text-xs text-[var(--muted)] leading-tight">{lab.title}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Module info */}
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-5">
               <h3 className="font-bold text-[var(--foreground)] mb-4">Module Info</h3>
               <div className="space-y-3">
                 {[
-                  { icon: PlayCircle, label: "Lectures", value: mod.lectureCount, color: "#185FA5" },
+                  { icon: PlayCircle, label: "Lectures", value: displayLectureCount, color: "#185FA5" },
                   { icon: FlaskConical, label: "Labs", value: mod.labCount, color: "#1D9E75" },
                   { icon: Clock, label: "Total time", value: `${mod.totalHours} hours`, color: "#7c3aed" },
                 ].map(({ icon: Icon, label, value, color }) => (

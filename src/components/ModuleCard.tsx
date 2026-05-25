@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Module } from "@/lib/data";
 import { BookOpen, FlaskConical, Clock } from "lucide-react";
 
@@ -18,12 +17,10 @@ export function ModuleCard({ module, progress }: ModuleCardProps) {
     >
       {/* Cover image */}
       <div className="relative h-44 overflow-hidden">
-        <Image
+        <img
           src={module.coverImage}
           alt={module.title}
-          fill
-          className="object-cover group-hover:scale-105 transition-transform duration-500"
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
         />
         <div
           className="absolute inset-0 opacity-70"

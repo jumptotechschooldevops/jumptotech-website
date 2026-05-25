@@ -12,6 +12,8 @@ export default function RegisterPage() {
     fullName: "",
     email: "",
     phone: "",
+    experienceLevel: "",
+    howHeard: "",
     password: "",
     confirmPassword: "",
   });
@@ -60,7 +62,10 @@ export default function RegisterPage() {
       await supabase.from("profiles").upsert({
         id: signUpData.user.id,
         full_name: form.fullName,
+        email: form.email,
         phone: form.phone,
+        experience_level: form.experienceLevel,
+        how_heard: form.howHeard,
       });
     }
 
@@ -161,6 +166,42 @@ export default function RegisterPage() {
                 placeholder="+7 (700) 000-0000"
                 className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#185FA5]/30 focus:border-[#185FA5] transition-colors text-sm"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">
+                Experience Level
+              </label>
+              <select
+                value={form.experienceLevel}
+                onChange={(e) => setForm((prev) => ({ ...prev, experienceLevel: e.target.value }))}
+                required
+                className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[#185FA5]/30 focus:border-[#185FA5] transition-colors text-sm"
+              >
+                <option value="" disabled>Select your level</option>
+                <option value="Beginner">Beginner — new to DevOps/IT</option>
+                <option value="Some Experience">Some Experience — basic IT knowledge</option>
+                <option value="Intermediate">Intermediate — worked in IT before</option>
+                <option value="Advanced">Advanced — professional background</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-[var(--foreground)] mb-1.5">
+                How did you hear about us?
+              </label>
+              <select
+                value={form.howHeard}
+                onChange={(e) => setForm((prev) => ({ ...prev, howHeard: e.target.value }))}
+                required
+                className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[#185FA5]/30 focus:border-[#185FA5] transition-colors text-sm"
+              >
+                <option value="" disabled>Select an option</option>
+                <option value="Social Media">Social Media</option>
+                <option value="Friend / Family">Friend / Family</option>
+                <option value="Google Search">Google Search</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
 
             <div>
