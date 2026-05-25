@@ -3,10 +3,12 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { AppStateProvider } from "@/contexts/AppStateContext";
 import { Navbar } from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { AnnouncementBanner } from "@/components/AnnouncementBanner";
 import { StickyCTA } from "@/components/StickyCTA";
+import { ChatBot } from "@/components/ChatBot";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,11 +56,14 @@ export default function RootLayout({
       >
         <ThemeProvider>
           <LanguageProvider>
-            <AnnouncementBanner />
-            <Navbar />
-            <main>{children}</main>
-            <Footer />
-            <StickyCTA />
+            <AppStateProvider>
+              <AnnouncementBanner />
+              <Navbar />
+              <main>{children}</main>
+              <Footer />
+              <StickyCTA />
+              <ChatBot />
+            </AppStateProvider>
           </LanguageProvider>
         </ThemeProvider>
       </body>

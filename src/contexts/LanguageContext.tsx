@@ -21,7 +21,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem("jtt_lang") as Lang | null;
-    if (stored === "ru" || stored === "en") setLang(stored);
+    if (stored === "ru" || stored === "en") {
+      setLang(stored);
+    }
   }, []);
 
   const toggleLang = () => {

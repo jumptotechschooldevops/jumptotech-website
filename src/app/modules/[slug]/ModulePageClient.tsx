@@ -4,10 +4,10 @@ import Link from "next/link";
 import { Module, Lecture } from "@/lib/data";
 import { useProgress } from "@/hooks/useProgress";
 import { useAuth } from "@/hooks/useAuth";
+import { useAppState } from "@/contexts/AppStateContext";
 import { GiscusComments } from "@/components/GiscusComments";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -37,45 +37,35 @@ interface DbLecture {
 }
 
 interface Props {
-  module: Module;
+  initialModuleSlug: string;
 }
 
-export function ModulePageClient({ module: mod }: Props) {
-  const { mounted, completedLectures, completedLabs, toggleLecture, toggleLab } = useProgress(mod.id);
+export function ModulePageClient({ initialModuleSlug }: Props) {
   const { loggedIn, mounted: authMounted } = useAuth();
   const router = useRouter();
+  const { modulesData } = useAppState();
+  
+  const foundMod = modulesData.find(m => m.slug === initialModuleSlug);
+  const mod = foundMod || null;
 
+  const { mounted, completedLectures, completedLabs, toggleLecture, toggleLab } = useProgress(mod ? mod.id : "");
+  
   const [dbLectures, setDbLectures] = useState<Lecture[]>([]);
   const [expandedLectures, setExpandedLectures] = useState<Set<string>>(new Set());
   const [sidebarLecturesOpen, setSidebarLecturesOpen] = useState(true);
   const [sidebarLabsOpen, setSidebarLabsOpen] = useState(false);
 
   useEffect(() => {
-    supabase
-      .from("lectures")
-      .select("id, title, description, duration, type, order_index")
-      .eq("module_slug", mod.slug)
-      .order("order_index", { ascending: true })
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          setDbLectures(
-            (data as DbLecture[]).map((l) => ({
-              id: l.id,
-              title: l.title,
-              description: l.description ?? "",
-              duration: l.duration,
-              type: (["lab", "video"].includes(l.type) ? l.type : "reading") as "reading" | "lab" | "video",
-            }))
-          );
-        }
-      });
-  }, [mod.slug]);
+    // Supabase has been removed. Only fallback to mock data now.
+  }, [mod?.slug]);
 
   useEffect(() => {
     if (authMounted && !loggedIn) {
       router.replace("/login");
     }
   }, [authMounted, loggedIn, router]);
+
+  if (!mod) return null;
 
   if (!authMounted || !loggedIn) return null;
 

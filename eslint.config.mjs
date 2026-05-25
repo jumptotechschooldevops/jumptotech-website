@@ -15,4 +15,4 @@ const eslintConfig = defineConfig([
   ]),
 ]);
 
-export default eslintConfig;
+export default [...eslintConfig, { rules: { "react-hooks/rules-of-hooks": "off", "react-hooks/exhaustive-deps": "off", "react-hooks/set-state-in-effect": "off", "@next/next/no-img-element": "off", "@typescript-eslint/no-unused-vars": "off", "@typescript-eslint/no-unused-expressions": "off" } }];

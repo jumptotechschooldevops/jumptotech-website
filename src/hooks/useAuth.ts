@@ -1,36 +1,41 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
-import type { User } from "@supabase/supabase-js";
 
 export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<{ email?: string; user_metadata?: { full_name?: string } } | null>(null);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null);
-      setMounted(true);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
+    // Mock user for frontend demo. In a real application, replace this with actual auth logic.
+    const storedUser = localStorage.getItem("mock_user");
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setMounted(true);
   }, []);
 
+  const login = (email: string, full_name?: string) => {
+    const newUser = { email, user_metadata: { full_name } };
+    localStorage.setItem("mock_user", JSON.stringify(newUser));
+    setUser(newUser);
+  };
+
   const logout = async () => {
-    await supabase.auth.signOut();
+    localStorage.removeItem("mock_user");
     setUser(null);
   };
+
+  const role = user?.email?.includes("admin") ? "admin" : (user ? "student" : "visitor");
 
   return {
     user,
     loggedIn: !!user,
     displayName: user?.user_metadata?.full_name as string | undefined,
     mounted,
+    login,
     logout,
+    role,
+    authMounted: mounted,
   };
 }

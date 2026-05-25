@@ -18,7 +18,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ModulePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const mod = modules.find((m) => m.slug === slug);
-  if (!mod) notFound();
-  return <ModulePageClient module={mod} />;
+  // Note: we can't easily use context in Server Component, we will pass slug to the client component to resolve.
+  return <ModulePageClient initialModuleSlug={slug} />;
 }

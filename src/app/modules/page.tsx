@@ -1,9 +1,9 @@
 "use client";
 
-import { modules } from "@/lib/data";
 import { ModuleCard } from "@/components/ModuleCard";
 import { useAllProgress } from "@/hooks/useProgress";
 import { useAuth } from "@/hooks/useAuth";
+import { useAppState } from "@/contexts/AppStateContext";
 import { BookOpen, FlaskConical, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -12,6 +12,7 @@ export default function ModulesPage() {
   const { getModulePercent, mounted } = useAllProgress();
   const { loggedIn, mounted: authMounted } = useAuth();
   const router = useRouter();
+  const { modulesData } = useAppState();
 
   useEffect(() => {
     if (authMounted && !loggedIn) {
@@ -19,9 +20,9 @@ export default function ModulesPage() {
     }
   }, [authMounted, loggedIn, router]);
 
-  const totalLectures = modules.reduce((s, m) => s + m.lectureCount, 0);
-  const totalLabs = modules.reduce((s, m) => s + m.labCount, 0);
-  const totalHours = modules.reduce((s, m) => s + m.totalHours, 0);
+  const totalLectures = modulesData.reduce((s, m) => s + m.lectureCount, 0);
+  const totalLabs = modulesData.reduce((s, m) => s + m.labCount, 0);
+  const totalHours = modulesData.reduce((s, m) => s + m.totalHours, 0);
 
   if (!authMounted || !loggedIn) return null;
 
@@ -57,7 +58,7 @@ export default function ModulesPage() {
       {/* Grid */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {modules.map((mod) => (
+          {modulesData.map((mod) => (
             <ModuleCard
               key={mod.id}
               module={mod}

@@ -1,17 +1,12 @@
 "use client";
 
-import Link from "next/link";
-import Image from "next/image";
-import { modules, announcements, discussions, stats } from "@/lib/data";
-import { useAllProgress } from "@/hooks/useProgress";
-import { ModuleCard } from "@/components/ModuleCard";
+import { announcements, discussions, stats } from "@/lib/data";
 import { RegistrationForm } from "@/components/RegistrationForm";
 import { CommunityPhotos } from "@/components/CommunityPhotos";
 import { SuccessStories } from "@/components/SuccessStories";
 import { FAQ } from "@/components/FAQ";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
-  ArrowRight,
   Users,
   BookOpen,
   FlaskConical,
@@ -27,9 +22,9 @@ import {
   Calendar,
   Clock,
   DollarSign,
-  Lock,
 } from "lucide-react";
-import { useAuth } from "@/hooks/useAuth";
+import { FounderSection } from "@/components/FounderSection";
+import { DevOpsQuiz } from "@/components/DevOpsQuiz";
 
 const tagStyles: Record<string, string> = {
   new: "bg-[#1D9E75]/15 text-[#1D9E75] border-[#1D9E75]/25",
@@ -45,17 +40,8 @@ const tagLabels: Record<string, string> = {
   deadline: "DEADLINE",
 };
 
-const latestLectures = [
-  { module: modules[4], lecture: modules[4].lectures[12] },
-  { module: modules[3], lecture: modules[3].lectures[5] },
-  { module: modules[6], lecture: modules[6].lectures[6] },
-  { module: modules[7], lecture: modules[7].lectures[6] },
-];
-
 export default function HomePage() {
-  const { getModulePercent, mounted } = useAllProgress();
   const { lang, t } = useLanguage();
-  const { loggedIn, mounted: authMounted } = useAuth();
 
   return (
     <div className="bg-[var(--background)]">
@@ -176,136 +162,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* MODULE GRID */}
-      <section id="modules" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-[var(--foreground)]">
-              {t("All Modules", "Все модули")}
-            </h2>
-            <p className="text-[var(--muted)] mt-1">
-              {stats.modules} {t("modules", "модулей")} · {stats.lectures} {t("lectures", "лекций")} · {stats.labs} {t("hands-on labs", "практических лабораторных")}
-            </p>
-          </div>
-          <Link
-            href="/modules"
-            className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-[#185FA5] hover:underline"
-          >
-            {t("View all", "Смотреть все")} <ArrowRight size={14} />
-          </Link>
-        </div>
+      {/* FOUNDER SECTION */}
+      <FounderSection />
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          {modules.map((mod, idx) => {
-            const isLocked = authMounted && !loggedIn && idx >= 2;
-            if (isLocked) {
-              return (
-                <Link
-                  key={mod.id}
-                  href="/login"
-                  className="group block rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--card-bg)] relative"
-                >
-                  <div className="relative h-44 overflow-hidden">
-                    <Image
-                      src={mod.coverImage}
-                      alt={mod.title}
-                      fill
-                      className="object-cover blur-sm scale-105"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
-                    <div className="absolute inset-0 bg-black/50" />
-                    <div className="absolute inset-0 flex flex-col items-center justify-center gap-2">
-                      <div className="w-10 h-10 rounded-full bg-white/15 border border-white/30 flex items-center justify-center">
-                        <Lock size={18} className="text-white" />
-                      </div>
-                      <span className="text-white text-xs font-semibold bg-black/40 px-3 py-1 rounded-full">
-                        {t("Login to access", "Войдите для доступа")}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="p-4 space-y-3 opacity-40 select-none">
-                    <p className="text-sm font-semibold text-[var(--foreground)]">{mod.title}</p>
-                    <p className="text-xs text-[var(--muted)] line-clamp-2">{mod.description}</p>
-                  </div>
-                </Link>
-              );
-            }
-            return (
-              <ModuleCard
-                key={mod.id}
-                module={mod}
-                progress={mounted ? getModulePercent(mod.id, mod.lectureCount, mod.labCount) : 0}
-              />
-            );
-          })}
-        </div>
-      </section>
-
-      {/* LATEST LECTURES */}
-      <section className="bg-[var(--card-bg)] border-y border-[var(--border)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-[var(--foreground)]">
-                {t("Latest Lectures", "Последние лекции")}
-              </h2>
-              <p className="text-[var(--muted)] mt-1">
-                {t("Recently added & updated content", "Недавно добавленный и обновлённый контент")}
-              </p>
-            </div>
-            <Link
-              href="/modules"
-              className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-[#185FA5] hover:underline"
-            >
-              {t("Browse all", "Смотреть все")} <ArrowRight size={14} />
-            </Link>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {latestLectures.map(({ module: mod, lecture }) => (
-              <Link
-                key={lecture.id}
-                href={`/modules/${mod.slug}`}
-                className="group rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--background)] card-hover"
-              >
-                <div className="relative h-36 overflow-hidden">
-                  <Image
-                    src={mod.coverImage}
-                    alt={mod.title}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-500"
-                    sizes="(max-width: 640px) 100vw, 25vw"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                  <div className="absolute bottom-2 left-2">
-                    <span
-                      className="px-2 py-0.5 rounded-md text-xs font-semibold text-white"
-                      style={{ backgroundColor: mod.color }}
-                    >
-                      {mod.title}
-                    </span>
-                  </div>
-                  <div className="absolute top-2 right-2">
-                    <span
-                      className={`px-2 py-0.5 rounded-md text-xs font-semibold text-white ${
-                        lecture.type === "lab" ? "bg-[#1D9E75]" : "bg-gray-600"
-                      }`}
-                    >
-                      {lecture.type}
-                    </span>
-                  </div>
-                </div>
-                <div className="p-3 space-y-1">
-                  <p className="text-sm font-semibold text-[var(--foreground)] line-clamp-2 group-hover:text-[#185FA5] transition-colors">
-                    {lecture.title}
-                  </p>
-                  <p className="text-xs text-[var(--muted)]">{lecture.duration}</p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* DEVOPS QUIZ */}
+      <DevOpsQuiz />
 
       {/* REGISTRATION FORM */}
       <RegistrationForm />

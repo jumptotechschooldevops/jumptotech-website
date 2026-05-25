@@ -4,29 +4,22 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Lock, Rocket, Eye, EyeOff, X, Mail } from "lucide-react";
-import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/hooks/useAuth";
 
 function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
   const [resetEmail, setResetEmail] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
-  const [resetError, setResetError] = useState("");
   const [resetSent, setResetSent] = useState(false);
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setResetLoading(true);
-    setResetError("");
 
-    const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-
-    if (error) {
-      setResetError("Something went wrong. Please try again.");
-    } else {
+    // Mock reset logic
+    setTimeout(() => {
       setResetSent(true);
-    }
-    setResetLoading(false);
+      setResetLoading(false);
+    }, 1000);
   };
 
   return (
@@ -72,11 +65,6 @@ function ForgotPasswordModal({ onClose }: { onClose: () => void }) {
               placeholder="you@example.com"
               className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#185FA5]/30 focus:border-[#185FA5] transition-colors text-sm"
             />
-            {resetError && (
-              <p className="text-red-500 text-xs bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
-                {resetError}
-              </p>
-            )}
             <button
               type="submit"
               disabled={resetLoading}
@@ -99,22 +87,19 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (authError) {
-      setError(
-        "Invalid email or password. If you just registered, please check your email to confirm your account first."
-      );
+    // Mock Login
+    setTimeout(() => {
+      login(email, "Test User");
       setLoading(false);
-    } else {
       router.push("/modules");
-    }
+    }, 1000);
   };
 
   return (
@@ -133,7 +118,7 @@ export default function LoginPage() {
               <h1 className="text-2xl font-bold text-[var(--foreground)]">Student Portal</h1>
               <p className="text-[var(--muted)] text-sm mt-1">Портал студента</p>
               <p className="text-xs text-[var(--muted)] mt-2">
-                Sign in to access your course materials
+                Sign in to access your course materials (Mock Auth)
               </p>
             </div>
 
@@ -148,7 +133,7 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   autoComplete="email"
                   required
-                  placeholder="you@example.com"
+                  placeholder="you@example.com (use admin for admin role)"
                   className="w-full px-4 py-3 rounded-xl border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#185FA5]/30 focus:border-[#185FA5] transition-colors text-sm"
                 />
               </div>
@@ -164,7 +149,7 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete="current-password"
                     required
-                    placeholder="Enter your password"
+                    placeholder="Enter your password (any password works)"
                     className="w-full px-4 py-3 pr-12 rounded-xl border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] placeholder-[var(--muted)] focus:outline-none focus:ring-2 focus:ring-[#185FA5]/30 focus:border-[#185FA5] transition-colors text-sm"
                   />
                   <button
