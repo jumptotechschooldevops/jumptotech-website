@@ -14,11 +14,8 @@ import {
   Circle,
   PlayCircle,
   FlaskConical,
-  Clock,
   ChevronRight,
-  ChevronDown,
   Award,
-  ExternalLink,
 } from "lucide-react";
 
 const difficultyColors = {
@@ -31,7 +28,6 @@ interface DbLecture {
   id: string;
   title: string;
   description: string | null;
-  duration: string;
   type: string;
   order_index: number;
 }
@@ -51,13 +47,33 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
   const { mounted, completedLectures, completedLabs, toggleLecture, toggleLab } = useProgress(mod ? mod.id : "");
   
   const [dbLectures, setDbLectures] = useState<Lecture[]>([]);
-  const [expandedLectures, setExpandedLectures] = useState<Set<string>>(new Set());
   const [sidebarLecturesOpen, setSidebarLecturesOpen] = useState(true);
   const [sidebarLabsOpen, setSidebarLabsOpen] = useState(false);
 
   useEffect(() => {
+<<<<<<< HEAD
     // Supabase has been removed. Only fallback to mock data now.
   }, [mod?.slug]);
+=======
+    supabase
+      .from("lectures")
+      .select("id, title, description, type, order_index")
+      .eq("module_slug", mod.slug)
+      .order("order_index", { ascending: true })
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setDbLectures(
+            (data as DbLecture[]).map((l) => ({
+              id: l.id,
+              title: l.title,
+              description: l.description ?? "",
+              type: (["lab", "video"].includes(l.type) ? l.type : "reading") as "reading" | "lab" | "video",
+            }))
+          );
+        }
+      });
+  }, [mod.slug]);
+>>>>>>> 0df90b6 (fix deployment cache)
 
   useEffect(() => {
     if (authMounted && !loggedIn) {
@@ -77,14 +93,7 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
   const progressPct = totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
   const isComplete = progressPct === 100;
 
-  const toggleExpanded = (id: string) => {
-    setExpandedLectures((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const firstLecture = displayLectures[0];
 
   return (
     <div className="bg-[var(--background)]">
@@ -129,10 +138,15 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                 <FlaskConical size={15} className="text-[#1D9E75]" />
                 {mod.labCount} labs
               </span>
-              <span className="flex items-center gap-1.5">
-                <Clock size={15} className="text-purple-500" />
-                {mod.totalHours}h total
-              </span>
+              {firstLecture && (
+                <Link
+                  href={`/modules/${mod.slug}/${firstLecture.id}`}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-[#185FA5] text-white text-xs font-semibold hover:bg-[#185FA5]/90 transition-colors"
+                >
+                  Start Module
+                  <ChevronRight size={13} />
+                </Link>
+              )}
             </div>
 
             {/* Progress ring */}
@@ -197,85 +211,52 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
               <div className="space-y-2">
                 {displayLectures.map((lecture, idx) => {
                   const isCompleted = mounted && completedLectures.includes(lecture.id);
-                  const isExpanded = expandedLectures.has(lecture.id);
                   return (
-                    <div
+                    <Link
                       key={lecture.id}
-                      className={`rounded-xl border transition-all ${
+                      href={`/modules/${mod.slug}/${lecture.id}`}
+                      className={`flex items-start gap-3 p-4 rounded-xl border transition-all group ${
                         isCompleted
-                          ? "border-[#1D9E75]/30 bg-[#1D9E75]/5"
-                          : "border-[var(--border)] bg-[var(--card-bg)]"
+                          ? "border-[#1D9E75]/30 bg-[#1D9E75]/5 hover:border-[#1D9E75]/50"
+                          : "border-[var(--border)] bg-[var(--card-bg)] hover:border-[#185FA5]/40 hover:bg-[#185FA5]/5"
                       }`}
                     >
-                      <div
-                        className="flex items-start gap-3 p-4 cursor-pointer hover:bg-[#185FA5]/5 rounded-xl transition-colors"
-                        onClick={() => toggleExpanded(lecture.id)}
-                      >
-                        {/* Number / check — click only toggles completion */}
-                        <div
-                          className="flex-shrink-0 mt-0.5"
-                          onClick={(e) => { e.stopPropagation(); mounted && toggleLecture(lecture.id); }}
-                        >
-                          {isCompleted ? (
-                            <CheckCircle2 size={20} className="text-[#1D9E75]" />
-                          ) : (
-                            <div className="w-5 h-5 rounded-full border-2 border-[var(--border)] flex items-center justify-center hover:border-[#185FA5] transition-colors">
-                              <span className="text-[10px] text-[var(--muted)] font-bold">{idx + 1}</span>
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-2">
-                            <p
-                              className={`text-sm font-semibold leading-snug ${
-                                isCompleted
-                                  ? "line-through text-[var(--muted)]"
-                                  : "text-[var(--foreground)]"
-                              }`}
-                            >
-                              {lecture.title}
-                            </p>
-                            <div className="flex items-center gap-2 shrink-0">
-                              {dbLectureIds.has(lecture.id) && (
-                                <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[#1D9E75]/15 text-[#1D9E75] border border-[#1D9E75]/30">
-                                  New
-                                </span>
-                              )}
-                              <ChevronDown
-                                size={14}
-                                className={`text-[var(--muted)] transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
-                              />
-                            </div>
+                      <div className="flex-shrink-0 mt-0.5">
+                        {isCompleted ? (
+                          <CheckCircle2 size={20} className="text-[#1D9E75]" />
+                        ) : (
+                          <div className="w-5 h-5 rounded-full border-2 border-[var(--border)] flex items-center justify-center group-hover:border-[#185FA5] transition-colors">
+                            <span className="text-[10px] text-[var(--muted)] font-bold">{idx + 1}</span>
                           </div>
-                          <p className="text-xs text-[var(--muted)] mt-1 leading-relaxed">{lecture.description}</p>
-                        </div>
+                        )}
                       </div>
 
-                      {isExpanded && (
-                        <div className="px-4 pb-4 ml-8">
-                          {lecture.subtopics && lecture.subtopics.length > 0 && (
-                            <ul className="space-y-1.5 mb-3">
-                              {lecture.subtopics.map((topic) => (
-                                <li key={topic} className="flex items-center gap-2 text-xs text-[var(--muted)]">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-[#185FA5]/50 shrink-0" />
-                                  {topic}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                          <a
-                            href={mod.mkdocsUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#185FA5] hover:underline"
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <p
+                            className={`text-sm font-semibold leading-snug ${
+                              isCompleted
+                                ? "line-through text-[var(--muted)]"
+                                : "text-[var(--foreground)] group-hover:text-[#185FA5]"
+                            } transition-colors`}
                           >
-                            Read full lecture
-                            <ExternalLink size={9} />
-                          </a>
+                            {lecture.title}
+                          </p>
+                          <div className="flex items-center gap-2 shrink-0">
+                            {dbLectureIds.has(lecture.id) && (
+                              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[#1D9E75]/15 text-[#1D9E75] border border-[#1D9E75]/30">
+                                New
+                              </span>
+                            )}
+                            <ChevronRight
+                              size={14}
+                              className="text-[var(--muted)] group-hover:text-[#185FA5] transition-colors"
+                            />
+                          </div>
                         </div>
-                      )}
-                    </div>
+                        <p className="text-xs text-[var(--muted)] mt-1 leading-relaxed">{lecture.description}</p>
+                      </div>
+                    </Link>
                   );
                 })}
               </div>
@@ -317,13 +298,15 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                               isCompleted ? "line-through text-[var(--muted)]" : "text-[var(--foreground)]"
                             }`}
                           >
-                            Lab {idx + 1} — {lab.title}
+                            {lab.title.startsWith("Lab ") ? lab.title : `Lab ${idx + 1} — ${lab.title}`}
                           </p>
-                          <span
-                            className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border shrink-0 ${difficultyColors[lab.difficulty]}`}
-                          >
-                            {lab.difficulty}
-                          </span>
+                          {lab.difficulty && (
+                            <span
+                              className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border shrink-0 ${difficultyColors[lab.difficulty]}`}
+                            >
+                              {lab.difficulty}
+                            </span>
+                          )}
                         </div>
                         <p className="text-xs text-[var(--muted)] leading-relaxed">{lab.description}</p>
                       </div>
@@ -419,18 +402,22 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                     Lectures
                     <span className="text-xs text-[var(--muted)] font-normal">({displayLectureCount})</span>
                   </span>
-                  <ChevronDown
+                  <ChevronRight
                     size={13}
-                    className={`transition-transform duration-200 ${sidebarLecturesOpen ? "rotate-180" : ""}`}
+                    className={`transition-transform duration-200 ${sidebarLecturesOpen ? "rotate-90" : ""}`}
                   />
                 </button>
                 {sidebarLecturesOpen && (
                   <div className="mt-1 space-y-0.5 pl-1">
                     {displayLectures.map((lecture, idx) => (
-                      <div key={lecture.id} className="flex items-start gap-1.5 py-0.5">
+                      <Link
+                        key={lecture.id}
+                        href={`/modules/${mod.slug}/${lecture.id}`}
+                        className="flex items-start gap-1.5 py-0.5 group hover:text-[#185FA5] transition-colors"
+                      >
                         <span className="text-[10px] text-[var(--muted)] w-5 text-right shrink-0 pt-px">{idx + 1}.</span>
-                        <span className="text-xs text-[var(--muted)] leading-tight">{lecture.title}</span>
-                      </div>
+                        <span className="text-xs text-[var(--muted)] group-hover:text-[#185FA5] leading-tight transition-colors">{lecture.title}</span>
+                      </Link>
                     ))}
                   </div>
                 )}
@@ -449,9 +436,9 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                     Labs
                     <span className="text-xs text-[var(--muted)] font-normal">({mod.labCount})</span>
                   </span>
-                  <ChevronDown
+                  <ChevronRight
                     size={13}
-                    className={`transition-transform duration-200 ${sidebarLabsOpen ? "rotate-180" : ""}`}
+                    className={`transition-transform duration-200 ${sidebarLabsOpen ? "rotate-90" : ""}`}
                   />
                 </button>
                 {sidebarLabsOpen && (
@@ -474,7 +461,6 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                 {[
                   { icon: PlayCircle, label: "Lectures", value: displayLectureCount, color: "#185FA5" },
                   { icon: FlaskConical, label: "Labs", value: mod.labCount, color: "#1D9E75" },
-                  { icon: Clock, label: "Total time", value: `${mod.totalHours} hours`, color: "#7c3aed" },
                 ].map(({ icon: Icon, label, value, color }) => (
                   <div key={label} className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-sm text-[var(--muted)]">

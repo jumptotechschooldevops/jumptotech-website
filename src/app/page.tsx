@@ -165,8 +165,10 @@ export default function HomePage() {
       {/* FOUNDER SECTION */}
       <FounderSection />
 
+
       {/* DEVOPS QUIZ */}
       <DevOpsQuiz />
+        
 
       {/* REGISTRATION FORM */}
       <RegistrationForm />
