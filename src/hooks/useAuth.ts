@@ -7,7 +7,7 @@ export function useAuth() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // Mock user for frontend demo. In a real application, replace this with actual auth logic.
+    // Mock user for frontend demo
     const storedUser = localStorage.getItem("mock_user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
