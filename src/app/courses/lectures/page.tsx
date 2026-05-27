@@ -53,7 +53,6 @@ export default function LecturesPage() {
               <p className="text-sm font-semibold text-[var(--foreground)] line-clamp-2 group-hover:text-[#185FA5] transition-colors">
                 {lecture.title}
               </p>
-              <p className="text-xs text-[var(--muted)]">{lecture.duration}</p>
             </div>
           </Link>
         ))}
