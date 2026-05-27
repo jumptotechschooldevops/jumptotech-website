@@ -51,29 +51,11 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
   const [sidebarLabsOpen, setSidebarLabsOpen] = useState(false);
 
   useEffect(() => {
-<<<<<<< HEAD
+
     // Supabase has been removed. Only fallback to mock data now.
   }, [mod?.slug]);
-=======
-    supabase
-      .from("lectures")
-      .select("id, title, description, type, order_index")
-      .eq("module_slug", mod.slug)
-      .order("order_index", { ascending: true })
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          setDbLectures(
-            (data as DbLecture[]).map((l) => ({
-              id: l.id,
-              title: l.title,
-              description: l.description ?? "",
-              type: (["lab", "video"].includes(l.type) ? l.type : "reading") as "reading" | "lab" | "video",
-            }))
-          );
-        }
-      });
-  }, [mod.slug]);
->>>>>>> 0df90b6 (fix deployment cache)
+
+
 
   useEffect(() => {
     if (authMounted && !loggedIn) {
