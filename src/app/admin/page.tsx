@@ -53,7 +53,6 @@ export default function AdminDashboard() {
                       addLecture(mod.id, {
                         id: `lec-${Date.now()}`,
                         title: newTitle,
-                        duration: "10 min",
                         type: "reading",
                         description: "Newly added lecture."
                       });
