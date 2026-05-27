@@ -5,6 +5,7 @@ export interface Lecture {
   type: "reading" | "lab" | "video";
   description: string;
   subtopics?: string[];
+  content?: string;
   completed?: boolean;
 }
 
