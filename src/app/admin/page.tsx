@@ -2,13 +2,46 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { useAppState } from "@/contexts/AppStateContext";
+import { useEffect, useState, useRef } from "react";
+import { useAppState, LectureWithVisibility } from "@/contexts/AppStateContext";
+import { Eye, EyeOff, GripVertical } from "lucide-react";
 
 export default function AdminDashboard() {
   const { loggedIn, role, authMounted } = useAuth();
   const router = useRouter();
-  const { modulesData, chatMessages, projects, deleteLecture, addLecture, addChatMessage, reviewProject } = useAppState();
+  const {
+    modulesData, chatMessages, projects,
+    deleteLecture, addLecture, reorderLectures, toggleModulePublish, toggleLectureVisibility, addModule,
+    addChatMessage, reviewProject
+  } = useAppState();
+
+  const [searchStudent, setSearchStudent] = useState("");
+  const dragItem = useRef<{moduleId: string, index: number} | null>(null);
+  const dragOverItem = useRef<{moduleId: string, index: number} | null>(null);
+
+  const handleDragStart = (e: React.DragEvent, moduleId: string, index: number) => {
+    dragItem.current = { moduleId, index };
+  };
+
+  const handleDragEnter = (e: React.DragEvent, moduleId: string, index: number) => {
+    dragOverItem.current = { moduleId, index };
+  };
+
+  const handleDragEnd = () => {
+    if (dragItem.current && dragOverItem.current && dragItem.current.moduleId === dragOverItem.current.moduleId) {
+      const moduleId = dragItem.current.moduleId;
+      const mod = modulesData.find(m => m.id === moduleId);
+      if (mod) {
+        const _lectures = [...mod.lectures];
+        const dragItemContent = _lectures[dragItem.current.index];
+        _lectures.splice(dragItem.current.index, 1);
+        _lectures.splice(dragOverItem.current.index, 0, dragItemContent);
+        reorderLectures(moduleId, _lectures);
+      }
+    }
+    dragItem.current = null;
+    dragOverItem.current = null;
+  };
 
   useEffect(() => {
     if (authMounted && (!loggedIn || role !== "admin")) {
@@ -26,12 +59,21 @@ export default function AdminDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="bg-[var(--card-bg)] border border-[var(--border)] p-6 rounded-2xl">
-          <h2 className="text-xl font-semibold mb-4">Student Project Submissions</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Student Projects</h2>
+            <input
+              type="text"
+              placeholder="Search students..."
+              className="text-sm border border-[var(--border)] rounded px-2 py-1 bg-[var(--background)]"
+              value={searchStudent}
+              onChange={(e) => setSearchStudent(e.target.value)}
+            />
+          </div>
           <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 mb-8">
-            {projects.length === 0 ? (
-              <p className="text-[var(--muted)] text-sm">No projects submitted yet.</p>
+            {projects.filter(p => p.studentName.toLowerCase().includes(searchStudent.toLowerCase())).length === 0 ? (
+              <p className="text-[var(--muted)] text-sm">No matching projects found.</p>
             ) : (
-              projects.map(proj => (
+              projects.filter(p => p.studentName.toLowerCase().includes(searchStudent.toLowerCase())).map(proj => (
                 <div key={proj.id} className="border border-[var(--border)] bg-[var(--background)] p-4 rounded-xl">
                   <div className="flex justify-between items-start mb-2">
                     <div>
@@ -72,19 +114,87 @@ export default function AdminDashboard() {
             )}
           </div>
 
-          <h2 className="text-xl font-semibold mb-4">Manage Lectures</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Manage Lectures</h2>
+            <button
+              className="text-sm bg-[#185FA5] text-white px-3 py-1.5 rounded font-medium hover:bg-[#185FA5]/90"
+              onClick={() => {
+                const title = window.prompt("Enter new module title:");
+                if (title) {
+                  addModule({
+                    id: `mod-${Date.now()}`,
+                    slug: title.toLowerCase().replace(/\s+/g, '-'),
+                    title,
+                    icon: "Folder",
+                    description: "New module.",
+                    color: "from-gray-500 to-gray-700",
+                    coverImage: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800",
+                    lectureCount: 0,
+                    labCount: 0,
+                    lectures: [],
+                    isPublished: true,
+                    totalHours: 0,
+                    mkdocsUrl: "",
+                    labs: []
+                  });
+                }
+              }}
+            >
+              + Create Module
+            </button>
+          </div>
           <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
             {modulesData.map(mod => (
-              <div key={mod.id} className="border-b border-[var(--border)] pb-4">
-                <h3 className="font-medium text-[#185FA5] mb-2">{mod.title}</h3>
+              <div key={mod.id} className={`border border-[var(--border)] p-4 rounded-xl ${mod.isPublished === false ? 'opacity-60' : ''}`}>
+                <div className="flex justify-between items-start mb-3">
+                  <div>
+                    <h3 className="font-medium text-[#185FA5]">{mod.title}</h3>
+                    <span className="text-xs text-[var(--muted)]">{mod.lectures.length} lessons</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <label className="text-xs cursor-pointer bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                      Upload Img
+                      <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                        if (e.target.files && e.target.files[0]) {
+                          alert("Thumbnail upload simulated for " + e.target.files[0].name);
+                        }
+                      }} />
+                    </label>
+                    <button
+                      onClick={() => toggleModulePublish(mod.id)}
+                      className="text-xs bg-[var(--background)] border border-[var(--border)] px-2 py-1 rounded"
+                    >
+                      {mod.isPublished === false ? 'Publish' : 'Unpublish'}
+                    </button>
+                  </div>
+                </div>
+
                 <ul className="space-y-2 text-sm text-[var(--muted)]">
-                  {mod.lectures.map(lec => (
-                    <li key={lec.id} className="flex justify-between items-center bg-[var(--background)] p-2 rounded">
-                      <span className="line-clamp-1">{lec.title}</span>
+                  {mod.lectures.map((lec, index) => (
+                    <li
+                      key={lec.id}
+                      className="flex justify-between items-center bg-[var(--background)] p-2 rounded border border-[var(--border)] cursor-move"
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, mod.id, index)}
+                      onDragEnter={(e) => handleDragEnter(e, mod.id, index)}
+                      onDragEnd={handleDragEnd}
+                      onDragOver={(e) => e.preventDefault()}
+                    >
+                      <div className="flex items-center gap-2">
+                        <GripVertical size={14} className="text-gray-400" />
+                        <span className={`line-clamp-1 ${(lec as LectureWithVisibility).isVisible === false ? 'line-through opacity-50' : ''}`}>{lec.title}</span>
+                      </div>
                       <div className="flex gap-2">
                         <button
+                          onClick={() => toggleLectureVisibility(mod.id, lec.id)}
+                          className="text-[var(--muted)] hover:text-[var(--foreground)]"
+                          title={(lec as LectureWithVisibility).isVisible === false ? "Show" : "Hide"}
+                        >
+                          {(lec as LectureWithVisibility).isVisible === false ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                        <button
                           onClick={() => deleteLecture(mod.id, lec.id)}
-                          className="text-xs bg-red-500/20 text-red-500 px-2 py-1 rounded hover:bg-red-500/30 transition shrink-0"
+                          className="text-xs bg-red-500/10 text-red-500 px-2 py-0.5 rounded hover:bg-red-500/20 transition shrink-0"
                         >
                           Delete
                         </button>
@@ -92,7 +202,7 @@ export default function AdminDashboard() {
                     </li>
                   ))}
                 </ul>
-                <div className="mt-2 flex gap-2">
+                <div className="mt-3 flex gap-2">
                   <button
                     onClick={() => {
                       const newTitle = window.prompt("Enter new lecture title:");

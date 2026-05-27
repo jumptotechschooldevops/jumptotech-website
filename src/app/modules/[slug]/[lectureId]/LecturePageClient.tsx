@@ -9,6 +9,7 @@ import { Module, Lecture } from "@/lib/data";
 import { useProgress } from "@/hooks/useProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
+import { useAppState } from "@/contexts/AppStateContext";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -55,6 +56,7 @@ export function LecturePageClient({ module: mod, lectureId, initialContent }: Pr
   const router = useRouter();
   const { mounted, completedLectures, completedLabs, toggleLecture } = useProgress(mod.id);
   const { loggedIn, mounted: authMounted } = useAuth();
+  const { markLectureComplete } = useAppState();
 
   const [dbLectures, setDbLectures] = useState<Lecture[]>([]);
   const [dbContent, setDbContent] = useState<string | null>(null);
@@ -76,11 +78,11 @@ export function LecturePageClient({ module: mod, lectureId, initialContent }: Pr
               content: l.content,
             }))
           );
-          const match = data.find((l: any) => l.id === lectureId);
+          const match = data.find((l: { id: string; content?: string }) => l.id === lectureId);
 
-if (match && typeof match === "object") {
-  setDbContent((match as any).content || "");
-}
+          if (match && typeof match === "object") {
+            setDbContent(match.content || "");
+          }
         }
       });
   }, [mod.slug, lectureId]);
