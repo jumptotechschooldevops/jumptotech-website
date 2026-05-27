@@ -41,13 +41,6 @@ export function FounderSection() {
 
               <p>
                 {t(
-                  "My professional journey in IT started at MHC, where I worked as a QA Engineer and gained hands-on experience with enterprise systems, automation testing, CI/CD pipelines, cloud technologies, and production-level applications.",
-                  "Мой профессиональный путь в IT начался в компании MHC, где я работала QA Engineer и получила практический опыт работы с enterprise-системами, automation testing, CI/CD pipeline, cloud технологиями и production-приложениями."
-                )}
-              </p>
-
-              <p>
-                {t(
                   "Through continuous learning and real-world experience, I transitioned into DevOps and Cloud Engineering, working with AWS, Kubernetes, Docker, Terraform, Linux, monitoring, automation, and cloud infrastructure technologies.",
                   "Благодаря постоянному обучению и практическому опыту я перешла в DevOps и Cloud Engineering, работая с AWS, Kubernetes, Docker, Terraform, Linux, monitoring, automation и cloud инфраструктурой."
                 )}
@@ -80,7 +73,7 @@ export function FounderSection() {
                 alt="Aisalkyn Aidarova"
                 fill
                 priority
-                className="object-cover object-top"
+                className="object-contain"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
 

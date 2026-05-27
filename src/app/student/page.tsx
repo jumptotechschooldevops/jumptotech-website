@@ -9,7 +9,7 @@ import { useAppState } from "@/contexts/AppStateContext";
 export default function StudentDashboard() {
   const { loggedIn, role, authMounted, displayName } = useAuth();
   const router = useRouter();
-  const { projects, submitProject } = useAppState();
+  const { projects, submitProject, modulesData } = useAppState();
   const [url, setUrl] = useState("");
   const [description, setDescription] = useState("");
 
@@ -27,6 +27,58 @@ export default function StudentDashboard() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pt-24 min-h-screen">
       <h1 className="text-3xl font-bold mb-8">Student Portal</h1>
       <p className="text-[var(--muted)] mb-8">Welcome to your course materials. Here you can access all unlocked modules, lectures, and labs.</p>
+
+      {/* Progress Section */}
+      <div className="mb-12 bg-[var(--card-bg)] border border-[var(--border)] p-6 rounded-2xl">
+        <h2 className="text-xl font-bold mb-4">Your Progress</h2>
+        {(() => {
+          const publishedModules = modulesData.filter(m => m.isPublished !== false);
+          let totalLectures = 0;
+          let completedLectures = 0;
+          let nextLectureLink = "/modules";
+
+          for (const mod of publishedModules) {
+            for (const lec of mod.lectures) {
+              if ((lec as import('@/contexts/AppStateContext').LectureWithVisibility).isVisible !== false) {
+                totalLectures++;
+                if (lec.completed) {
+                  completedLectures++;
+                } else if (nextLectureLink === "/modules") {
+                  nextLectureLink = `/modules/${mod.slug}/${lec.id}`;
+                }
+              }
+            }
+          }
+
+          const progressPercent = totalLectures === 0 ? 0 : Math.round((completedLectures / totalLectures) * 100);
+
+          return (
+            <div className="space-y-4">
+              <div className="flex justify-between items-end">
+                <div>
+                  <p className="text-3xl font-bold text-[#185FA5]">{progressPercent}%</p>
+                  <p className="text-sm text-[var(--muted)]">Course Completed</p>
+                </div>
+                <p className="text-sm font-medium">{completedLectures} of {totalLectures} lessons finished</p>
+              </div>
+              <div className="w-full bg-[var(--background)] border border-[var(--border)] rounded-full h-4 overflow-hidden">
+                <div
+                  className="bg-[#1D9E75] h-4 rounded-full transition-all duration-500 ease-in-out"
+                  style={{ width: `${progressPercent}%` }}
+                ></div>
+              </div>
+              <div className="pt-4 flex justify-end">
+                <Link
+                  href={nextLectureLink}
+                  className="bg-[#185FA5] text-white px-6 py-2 rounded-lg font-medium hover:bg-[#185FA5]/90 transition inline-block"
+                >
+                  Continue Learning →
+                </Link>
+              </div>
+            </div>
+          );
+        })()}
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Link href="/courses/lectures" className="p-6 bg-[#185FA5]/10 border border-[#185FA5]/30 rounded-2xl hover:bg-[#185FA5]/20 transition">

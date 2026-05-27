@@ -20,12 +20,20 @@ export type StudentProject = {
   timestamp: string;
 };
 
+export type ModuleWithVisibility = Module & { isPublished?: boolean };
+export type LectureWithVisibility = Lecture & { isVisible?: boolean };
+
 type AppStateContextType = {
-  modulesData: Module[];
+  modulesData: ModuleWithVisibility[];
   chatMessages: ChatMessage[];
   projects: StudentProject[];
-  addLecture: (moduleId: string, lecture: Lecture) => void;
+  addLecture: (moduleId: string, lecture: LectureWithVisibility) => void;
   deleteLecture: (moduleId: string, lectureId: string) => void;
+  reorderLectures: (moduleId: string, newLectures: LectureWithVisibility[]) => void;
+  toggleModulePublish: (moduleId: string) => void;
+  toggleLectureVisibility: (moduleId: string, lectureId: string) => void;
+  markLectureComplete: (moduleId: string, lectureId: string) => void;
+  addModule: (module: ModuleWithVisibility) => void;
   addChatMessage: (msg: ChatMessage) => void;
   submitProject: (project: Omit<StudentProject, "id" | "status" | "feedback" | "timestamp">) => void;
   reviewProject: (projectId: string, feedback: string) => void;
@@ -34,7 +42,7 @@ type AppStateContextType = {
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
-  const [modulesData, setModulesData] = useState<Module[]>([]);
+  const [modulesData, setModulesData] = useState<ModuleWithVisibility[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [projects, setProjects] = useState<StudentProject[]>([]);
   const [mounted, setMounted] = useState(false);
@@ -80,7 +88,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
   }, [projects, mounted]);
 
-  const addLecture = (moduleId: string, lecture: Lecture) => {
+  const addLecture = (moduleId: string, lecture: LectureWithVisibility) => {
     setModulesData(prev =>
       prev.map(mod => {
         if (mod.id === moduleId) {
@@ -94,6 +102,60 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         return mod;
       })
     );
+  };
+
+  const reorderLectures = (moduleId: string, newLectures: LectureWithVisibility[]) => {
+    setModulesData(prev =>
+      prev.map(mod => mod.id === moduleId ? { ...mod, lectures: newLectures } : mod)
+    );
+  };
+
+  const toggleModulePublish = (moduleId: string) => {
+    setModulesData(prev =>
+      prev.map(mod => mod.id === moduleId ? { ...mod, isPublished: mod.isPublished === false ? true : false } : mod)
+    );
+  };
+
+  const markLectureComplete = (moduleId: string, lectureId: string) => {
+    setModulesData(prev =>
+      prev.map(mod => {
+        if (mod.id === moduleId) {
+          return {
+            ...mod,
+            lectures: mod.lectures.map(l => {
+              if (l.id === lectureId) {
+                return { ...l, completed: true };
+              }
+              return l;
+            })
+          };
+        }
+        return mod;
+      })
+    );
+  };
+
+  const toggleLectureVisibility = (moduleId: string, lectureId: string) => {
+    setModulesData(prev =>
+      prev.map(mod => {
+        if (mod.id === moduleId) {
+          return {
+            ...mod,
+            lectures: mod.lectures.map(l => {
+              if (l.id === lectureId) {
+                return { ...l, isVisible: (l as LectureWithVisibility).isVisible === false ? true : false };
+              }
+              return l;
+            })
+          };
+        }
+        return mod;
+      })
+    );
+  };
+
+  const addModule = (module: ModuleWithVisibility) => {
+    setModulesData(prev => [...prev, module]);
   };
 
   const deleteLecture = (moduleId: string, lectureId: string) => {
@@ -145,7 +207,21 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AppStateContext.Provider value={{ modulesData: mounted ? modulesData : initialModules, chatMessages, projects, addLecture, deleteLecture, addChatMessage, submitProject, reviewProject }}>
+    <AppStateContext.Provider value={{
+      modulesData: mounted ? modulesData : initialModules,
+      chatMessages,
+      projects,
+      addLecture,
+      deleteLecture,
+      reorderLectures,
+      toggleModulePublish,
+      toggleLectureVisibility,
+      markLectureComplete,
+      addModule,
+      addChatMessage,
+      submitProject,
+      reviewProject
+    }}>
       {children}
     </AppStateContext.Provider>
   );
