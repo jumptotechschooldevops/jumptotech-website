@@ -10,20 +10,20 @@ export function FounderSection() {
     <section className="bg-[var(--card-bg)] border-y border-[var(--border)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-start">
 
           {/* TEXT SECTION */}
           <div className="order-2 md:order-1 space-y-6">
 
             <div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-[var(--foreground)]">
+              <h2 className="text-3xl sm:text-4xl font-bold text-[var(--foreground)]">
                 {t("Meet the Founder", "Познакомьтесь с основателем")}
               </h2>
 
-              <div className="w-20 h-1 bg-[#185FA5] mt-4 rounded-full" />
+              <div className="w-24 h-1 bg-[#185FA5] mt-4 rounded-full" />
             </div>
 
-            <div className="space-y-4 text-[var(--muted)] leading-relaxed text-sm sm:text-base">
+            <div className="space-y-5 text-[var(--muted)] leading-8 text-sm sm:text-base">
 
               <p>
                 {t(
@@ -73,23 +73,26 @@ export function FounderSection() {
           {/* IMAGE SECTION */}
           <div className="order-1 md:order-2">
 
-            <div className="relative h-96 w-full rounded-2xl overflow-hidden border-4 border-[#185FA5]/20">
+            <div className="relative h-[650px] w-full rounded-3xl overflow-hidden border-4 border-[#185FA5]/20 shadow-2xl">
 
               <Image
                 src="/founder.png"
                 alt="Aisalkyn Aidarova"
                 fill
+                priority
                 className="object-cover object-top"
                 sizes="(max-width: 768px) 100vw, 50vw"
               />
 
-              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
 
-                <p className="text-white font-bold text-lg">
+              <div className="absolute bottom-0 left-0 right-0 p-8">
+
+                <p className="text-white text-2xl font-bold">
                   Aisalkyn Aidarova
                 </p>
 
-                <p className="text-white/80 text-sm">
+                <p className="text-white/90 text-base mt-1">
                   Founder of JumpToTech DevOps School
                 </p>
 
