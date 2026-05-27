@@ -2,12 +2,16 @@
 
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useAppState } from "@/contexts/AppStateContext";
 
 export default function StudentDashboard() {
-  const { loggedIn, role, authMounted } = useAuth();
+  const { loggedIn, role, authMounted, displayName } = useAuth();
   const router = useRouter();
+  const { projects, submitProject } = useAppState();
+  const [url, setUrl] = useState("");
+  const [description, setDescription] = useState("");
 
   useEffect(() => {
     if (authMounted && !loggedIn) {
@@ -23,7 +27,7 @@ export default function StudentDashboard() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 pt-24 min-h-screen">
       <h1 className="text-3xl font-bold mb-8">Student Portal</h1>
       <p className="text-[var(--muted)] mb-8">Welcome to your course materials. Here you can access all unlocked modules, lectures, and labs.</p>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Link href="/courses/lectures" className="p-6 bg-[#185FA5]/10 border border-[#185FA5]/30 rounded-2xl hover:bg-[#185FA5]/20 transition">
           <h2 className="text-xl font-bold text-[#185FA5] mb-2">Lectures</h2>
@@ -37,6 +41,78 @@ export default function StudentDashboard() {
           <h2 className="text-xl font-bold text-[var(--foreground)] mb-2">All Modules</h2>
           <p className="text-sm text-[var(--muted)]">Browse content by module.</p>
         </Link>
+      </div>
+
+      <div className="mt-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-[var(--card-bg)] border border-[var(--border)] p-6 rounded-2xl">
+          <h2 className="text-xl font-bold mb-4">Submit Project Deployment</h2>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (url.trim()) {
+                submitProject({ studentName: displayName || "Student", url, description });
+                setUrl("");
+                setDescription("");
+                alert("Project submitted successfully!");
+              }
+            }}
+            className="space-y-4"
+          >
+            <div>
+              <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Deployment URL *</label>
+              <input
+                type="url"
+                required
+                value={url}
+                onChange={e => setUrl(e.target.value)}
+                className="w-full bg-[var(--background)] border border-[var(--border)] rounded px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:border-[#185FA5]"
+                placeholder="https://my-app.vercel.app"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-[var(--foreground)] mb-1">Description</label>
+              <textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                className="w-full bg-[var(--background)] border border-[var(--border)] rounded px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:border-[#185FA5] h-24"
+                placeholder="Briefly describe what this project does and the stack used..."
+              />
+            </div>
+            <button type="submit" className="bg-[#185FA5] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#185FA5]/90">
+              Submit for Review
+            </button>
+          </form>
+        </div>
+
+        <div className="bg-[var(--card-bg)] border border-[var(--border)] p-6 rounded-2xl">
+          <h2 className="text-xl font-bold mb-4">My Submissions</h2>
+          <div className="space-y-4 max-h-[350px] overflow-y-auto pr-2">
+            {projects.filter(p => p.studentName === (displayName || "Student")).length === 0 ? (
+              <p className="text-[var(--muted)] text-sm">You haven&apos;t submitted any projects yet.</p>
+            ) : (
+              projects.filter(p => p.studentName === (displayName || "Student")).map(proj => (
+                <div key={proj.id} className="p-4 rounded-xl border border-[var(--border)] bg-[var(--background)]">
+                  <div className="flex justify-between items-start mb-2">
+                    <a href={proj.url} target="_blank" rel="noopener noreferrer" className="text-[#185FA5] hover:underline font-medium break-all">
+                      {proj.url}
+                    </a>
+                    <span className={`px-2 py-0.5 rounded text-xs font-medium border ${proj.status === "reviewed" ? "bg-[#1D9E75]/10 text-[#1D9E75] border-[#1D9E75]/30" : "bg-yellow-500/10 text-yellow-500 border-yellow-500/30"}`}>
+                      {proj.status === "reviewed" ? "Reviewed" : "Pending Review"}
+                    </span>
+                  </div>
+                  {proj.description && <p className="text-sm text-[var(--muted)] mb-3 line-clamp-2">{proj.description}</p>}
+
+                  {proj.feedback && (
+                    <div className="mt-3 p-3 bg-[#185FA5]/5 border border-[#185FA5]/20 rounded-lg">
+                      <p className="text-xs font-bold text-[#185FA5] mb-1">Instructor Feedback:</p>
+                      <p className="text-sm text-[var(--foreground)]">{proj.feedback}</p>
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

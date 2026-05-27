@@ -5,17 +5,30 @@ import { modules as initialModules, Module, Lecture } from "@/lib/data";
 
 export type ChatMessage = {
   id: string;
-  sender: "user" | "bot";
+  sender: "user" | "bot" | "admin";
   text: string;
+  timestamp: string;
+};
+
+export type StudentProject = {
+  id: string;
+  studentName: string;
+  url: string;
+  description: string;
+  feedback: string;
+  status: "pending" | "reviewed";
   timestamp: string;
 };
 
 type AppStateContextType = {
   modulesData: Module[];
   chatMessages: ChatMessage[];
+  projects: StudentProject[];
   addLecture: (moduleId: string, lecture: Lecture) => void;
   deleteLecture: (moduleId: string, lectureId: string) => void;
   addChatMessage: (msg: ChatMessage) => void;
+  submitProject: (project: Omit<StudentProject, "id" | "status" | "feedback" | "timestamp">) => void;
+  reviewProject: (projectId: string, feedback: string) => void;
 };
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
@@ -23,6 +36,7 @@ const AppStateContext = createContext<AppStateContextType | undefined>(undefined
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [modulesData, setModulesData] = useState<Module[]>([]);
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [projects, setProjects] = useState<StudentProject[]>([]);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -37,6 +51,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     const storedMessages = localStorage.getItem("jtt_chat_messages");
     if (storedMessages) {
       setChatMessages(JSON.parse(storedMessages));
+    }
+
+    const storedProjects = localStorage.getItem("jtt_projects");
+    if (storedProjects) {
+      setProjects(JSON.parse(storedProjects));
     }
 
     setMounted(true);
@@ -55,8 +74,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
   }, [chatMessages, mounted]);
 
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem("jtt_projects", JSON.stringify(projects));
+    }
+  }, [projects, mounted]);
+
   const addLecture = (moduleId: string, lecture: Lecture) => {
-    setModulesData(prev => 
+    setModulesData(prev =>
       prev.map(mod => {
         if (mod.id === moduleId) {
           return {
@@ -72,7 +97,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteLecture = (moduleId: string, lectureId: string) => {
-    setModulesData(prev => 
+    setModulesData(prev =>
       prev.map(mod => {
         if (mod.id === moduleId) {
           const lectureToDelete = mod.lectures.find(l => l.id === lectureId);
@@ -94,6 +119,25 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setChatMessages(prev => [...prev, msg]);
   };
 
+  const submitProject = (project: Omit<StudentProject, "id" | "status" | "feedback" | "timestamp">) => {
+    setProjects(prev => [
+      ...prev,
+      {
+        ...project,
+        id: `proj-${Date.now()}`,
+        status: "pending",
+        feedback: "",
+        timestamp: new Date().toISOString()
+      }
+    ]);
+  };
+
+  const reviewProject = (projectId: string, feedback: string) => {
+    setProjects(prev =>
+      prev.map(p => p.id === projectId ? { ...p, status: "reviewed", feedback } : p)
+    );
+  };
+
   if (!mounted) {
     // Return empty children or loader to avoid hydration mismatch if needed
     // But since it's just state, we can render children and they might use empty state momentarily.
@@ -101,7 +145,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <AppStateContext.Provider value={{ modulesData: mounted ? modulesData : initialModules, chatMessages, addLecture, deleteLecture, addChatMessage }}>
+    <AppStateContext.Provider value={{ modulesData: mounted ? modulesData : initialModules, chatMessages, projects, addLecture, deleteLecture, addChatMessage, submitProject, reviewProject }}>
       {children}
     </AppStateContext.Provider>
   );

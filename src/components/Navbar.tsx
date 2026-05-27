@@ -24,6 +24,8 @@ export function Navbar() {
   const links = [
     { href: "/", label: lang === "ru" ? "Главная" : "Home" },
     { href: "/modules", label: lang === "ru" ? "Модули" : "Modules" },
+    { href: "/founder", label: lang === "ru" ? "Основатель" : "Founder" },
+    { href: "/certifications", label: lang === "ru" ? "Сертификаты" : "Certifications" },
   ];
 
   return (

@@ -8,8 +8,8 @@ import Image from "next/image";
 export default function LabsPage() {
   const { t } = useLanguage();
   const { modulesData } = useAppState();
-  
-  const allLabs = modulesData.flatMap(mod => 
+
+  const allLabs = modulesData.flatMap(mod =>
     mod.lectures.filter(l => l.type === 'lab').map(lecture => ({ module: mod, lecture }))
   );
 
@@ -18,7 +18,7 @@ export default function LabsPage() {
       <h1 className="text-3xl font-bold text-[var(--foreground)] mb-8">
         {t("All Labs", "Все лабораторные работы")}
       </h1>
-      
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {allLabs.map(({ module: mod, lecture }) => (
           <Link
@@ -53,6 +53,7 @@ export default function LabsPage() {
               <p className="text-sm font-semibold text-[var(--foreground)] line-clamp-2 group-hover:text-[#1D9E75] transition-colors">
                 {lecture.title}
               </p>
+              <p className="text-xs text-[var(--muted)]">{lecture.duration}</p>
             </div>
           </Link>
         ))}

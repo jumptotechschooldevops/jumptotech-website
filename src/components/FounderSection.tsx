@@ -17,7 +17,7 @@ export function FounderSection() {
               </h2>
               <div className="w-20 h-1 bg-[#185FA5] mt-4 rounded-full" />
             </div>
-            
+
             <div className="space-y-4 text-[var(--muted)] leading-relaxed text-sm sm:text-base">
               <p>
                 {t(
@@ -33,7 +33,7 @@ export function FounderSection() {
               </p>
             </div>
           </div>
-          
+
           <div className="order-1 md:order-2">
             <div className="relative h-96 w-full rounded-2xl overflow-hidden border-4 border-[#185FA5]/20">
               <Image

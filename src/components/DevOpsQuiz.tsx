@@ -78,7 +78,7 @@ export function DevOpsQuiz() {
           <h3 className="text-lg font-medium text-[var(--foreground)]">
             {currentQuestion + 1}. {question.q}
           </h3>
-          
+
           <div className="space-y-3">
             {question.options.map((opt, idx) => {
               let btnClass = "border-[var(--border)] bg-[var(--background)] hover:border-[#185FA5]";
@@ -112,7 +112,7 @@ export function DevOpsQuiz() {
               <p className="text-sm text-blue-800 dark:text-blue-200">
                 <strong>Explanation:</strong> {question.explanation}
               </p>
-              <button 
+              <button
                 onClick={handleNext}
                 className="mt-4 px-4 py-2 bg-[#185FA5] text-white rounded-lg text-sm font-medium hover:bg-[#185FA5]/90 transition"
               >

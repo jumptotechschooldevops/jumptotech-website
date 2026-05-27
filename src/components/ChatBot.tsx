@@ -6,28 +6,24 @@ import { useAppState } from "@/contexts/AppStateContext";
 
 export function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<{ sender: 'bot' | 'user', text: string }[]>([
-    { sender: 'bot', text: 'Hi! Have any questions about JumpToTech?' }
-  ]);
   const [inputValue, setInputValue] = useState("");
-  const { addChatMessage } = useAppState();
+  const { chatMessages, addChatMessage } = useAppState();
 
   const handleSend = () => {
     if (!inputValue.trim()) return;
-    
+
     // Add user message
-    setMessages(prev => [...prev, { sender: 'user', text: inputValue }]);
     addChatMessage({
       id: `msg-${Date.now()}`,
       sender: "user",
       text: inputValue,
       timestamp: new Date().toISOString()
     });
-    
+
     // Process bot response
     const query = inputValue.toLowerCase();
     let response = "I'll pass this question to our admins! They will see it in their dashboard.";
-    
+
     if (query.includes("price") || query.includes("cost")) {
       response = "The bootcamp costs $700/mo or $5,000 total.";
     } else if (query.includes("duration") || query.includes("how long")) {
@@ -37,10 +33,9 @@ export function ChatBot() {
     }
 
     setInputValue("");
-    
+
     // Simulate delay for bot reply
     setTimeout(() => {
-      setMessages(prev => [...prev, { sender: 'bot', text: response }]);
       addChatMessage({
         id: `msg-${Date.now()}`,
         sender: "bot",
@@ -49,6 +44,10 @@ export function ChatBot() {
       });
     }, 1000);
   };
+
+  const displayMessages = chatMessages.length > 0
+    ? chatMessages
+    : [{ id: "welcome", sender: "bot" as const, text: "Hi! Have any questions about JumpToTech?", timestamp: new Date().toISOString() }];
 
   return (
     <>
@@ -67,17 +66,18 @@ export function ChatBot() {
               <X size={20} />
             </button>
           </div>
-          
+
           <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[var(--background)]">
-            {messages.map((msg, idx) => (
+            {displayMessages.map((msg, idx) => (
               <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.sender === 'user' ? 'bg-[#185FA5] text-white rounded-br-none' : 'bg-[var(--card-bg)] border border-[var(--border)] text-[var(--foreground)] rounded-bl-none'}`}>
+                  {msg.sender === "admin" && <div className="text-[10px] text-[#185FA5] font-bold mb-1">Admin</div>}
                   {msg.text}
                 </div>
               </div>
             ))}
           </div>
-          
+
           <div className="p-3 border-t border-[var(--border)] bg-[var(--card-bg)] shrink-0">
             <form onSubmit={(e) => { e.preventDefault(); handleSend(); }} className="flex items-center gap-2">
               <input
