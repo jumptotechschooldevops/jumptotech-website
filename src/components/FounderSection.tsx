@@ -9,6 +9,7 @@ export function FounderSection() {
   return (
     <section className="bg-[var(--card-bg)] border-y border-[var(--border)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
 
           {/* TEXT SECTION */}
@@ -71,6 +72,7 @@ export function FounderSection() {
 
           {/* IMAGE SECTION */}
           <div className="order-1 md:order-2">
+
             <div className="relative h-96 w-full rounded-2xl overflow-hidden border-4 border-[#185FA5]/20">
 
               <Image
@@ -82,6 +84,7 @@ export function FounderSection() {
               />
 
               <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-6">
+
                 <p className="text-white font-bold text-lg">
                   Aisalkyn Aidarova
                 </p>
@@ -89,8 +92,8 @@ export function FounderSection() {
                 <p className="text-white/80 text-sm">
                   Founder of JumpToTech DevOps School
                 </p>
-              </div>
 
+              </div>
             </div>
           </div>
 
