@@ -78,8 +78,8 @@ export function LecturePageClient({ module: mod, lectureId, initialContent }: Pr
           );
           const match = data.find((l: any) => l.id === lectureId);
 
-if (match && "content" in match) {
-  setDbContent(match.content);
+if (match && typeof match === "object") {
+  setDbContent((match as any).content || "");
 }
         }
       });
