@@ -1,10 +1,11 @@
 export interface Lecture {
   id: string;
   title: string;
-  duration: string;
+  duration?: string;
   type: "reading" | "lab" | "video";
   description: string;
   subtopics?: string[];
+  content?: string;
   completed?: boolean;
 }
 
