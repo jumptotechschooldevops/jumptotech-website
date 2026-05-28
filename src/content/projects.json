@@ -1,0 +1,41 @@
+{
+  "categories": ["AWS", "Kubernetes", "CI/CD", "Terraform", "Monitoring"],
+  "projects": [
+    {
+      "id": "1",
+      "title": "Automated E-Commerce Deployment",
+      "studentName": "Alex Chen",
+      "description": "A fully automated CI/CD pipeline deploying a microservices e-commerce app to AWS EKS.",
+      "technologies": ["AWS EKS", "GitHub Actions", "Docker", "Terraform"],
+      "image": "https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?auto=format&fit=crop&q=80&w=800",
+      "category": "Kubernetes",
+      "githubLink": "https://github.com",
+      "docsLink": "#",
+      "date": "2024-03-15"
+    },
+    {
+      "id": "2",
+      "title": "Serverless Data Processing",
+      "studentName": "Maria Garcia",
+      "description": "Event-driven architecture using AWS Lambda, S3, and DynamoDB for real-time data processing.",
+      "technologies": ["AWS Lambda", "Python", "DynamoDB", "S3"],
+      "image": "https://images.unsplash.com/photo-1558494949-ef010cbdcc31?auto=format&fit=crop&q=80&w=800",
+      "category": "AWS",
+      "githubLink": "https://github.com",
+      "docsLink": "#",
+      "date": "2024-04-02"
+    },
+    {
+      "id": "3",
+      "title": "Multi-Region Infrastructure Provisioning",
+      "studentName": "James Wilson",
+      "description": "Terraform modules to deploy a highly available network architecture across two AWS regions.",
+      "technologies": ["Terraform", "AWS VPC", "Route53"],
+      "image": "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800",
+      "category": "Terraform",
+      "githubLink": "https://github.com",
+      "docsLink": "#",
+      "date": "2024-04-18"
+    }
+  ]
+}

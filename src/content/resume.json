@@ -1,0 +1,50 @@
+{
+  "hero": {
+    "title": "How to Create a Professional DevOps Resume",
+    "subtitle": "Resume strategies that help students pass ATS systems and get interviews."
+  },
+  "structure": [
+    { "title": "Summary", "desc": "A brief 2-3 sentence overview of your experience, highlighting key cloud and automation skills." },
+    { "title": "Skills", "desc": "Categorize by Cloud, CI/CD, IaC, Containers, and Scripting." },
+    { "title": "Experience", "desc": "Focus on impact, numbers, and the technologies used." },
+    { "title": "Projects", "desc": "Detail real-world projects showing end-to-end implementation." },
+    { "title": "Certifications", "desc": "List relevant certs like AWS Solutions Architect or CKA." },
+    { "title": "Education", "desc": "Keep it brief, placing it after experience if you have relevant work history." }
+  ],
+  "resumeExample": {
+    "name": "Jane Doe",
+    "title": "Cloud / DevOps Engineer",
+    "contact": "jane.doe@email.com | github.com/janedoe | linkedin.com/in/janedoe",
+    "summary": "Results-driven DevOps Engineer with expertise in AWS, Kubernetes, and CI/CD pipelines. Proven ability to automate infrastructure and reduce deployment times by 40%.",
+    "skills": {
+      "Cloud": "AWS (EC2, S3, RDS, EKS, IAM, VPC)",
+      "Containers & Orchestration": "Docker, Kubernetes",
+      "CI/CD": "Jenkins, GitHub Actions, GitLab CI",
+      "IaC & Config": "Terraform, Ansible",
+      "Scripting": "Python, Bash"
+    },
+    "experience": [
+      {
+        "role": "Junior DevOps Engineer",
+        "company": "Tech Startup Inc.",
+        "dates": "Jan 2024 - Present",
+        "bullets": [
+          "Automated infrastructure provisioning using Terraform, reducing setup time by 50%.",
+          "Implemented CI/CD pipelines using GitHub Actions for containerized applications.",
+          "Monitored cluster health using Prometheus and Grafana."
+        ]
+      }
+    ]
+  },
+  "tips": [
+    { "title": "ATS Optimization", "desc": "Use standard section headings and avoid complex formatting or tables." },
+    { "title": "Keywords", "desc": "Include tools directly mentioned in the job description (e.g., 'Kubernetes', 'Terraform')." },
+    { "title": "Metrics and achievements", "desc": "Use the XYZ formula: Accomplished [X] as measured by [Y], by doing [Z]." },
+    { "title": "Common mistakes", "desc": "Avoid rating your skills (e.g., 4/5 Python) and spelling errors on tool names." },
+    { "title": "Real recruiter expectations", "desc": "Recruiters want to see what you actually *built*, not just a list of buzzwords." }
+  ],
+  "downloadLink": "/assets/devops-resume-template.pdf",
+  "videos": [
+    { "title": "Resume Workshop", "url": "https://www.youtube.com/embed/dQw4w9WgXcQ" }
+  ]
+}
