@@ -8,92 +8,126 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 export async function POST(req: Request) {
   try {
     const { sessionId } = await req.json();
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    console.log(`[SYNC] Sync requested for sessionId: ${sessionId}`);
 
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
     if (!botToken) {
+      console.warn("[SYNC] Telegram not configured. Skipping getUpdates.");
       return NextResponse.json({ success: true, warning: "Telegram not configured" });
     }
 
-    // Attempt to pull updates from Telegram using long polling endpoint
-    // This will fail with 409 Conflict if a webhook is active, which is fine.
     const getUpdatesUrl = `https://api.telegram.org/bot${botToken}/getUpdates`;
     const tgRes = await fetch(getUpdatesUrl);
 
     if (tgRes.ok) {
       const tgData = await tgRes.json();
-      if (tgData.ok && tgData.result && tgData.result.length > 0) {
+
+      if (!tgData.ok) {
+         console.error(`[SYNC] Telegram API returned ok=false:`, JSON.stringify(tgData));
+      } else if (tgData.result && tgData.result.length > 0) {
+        console.log(`[SYNC] Found ${tgData.result.length} updates from Telegram.`);
         let maxUpdateId = 0;
 
         for (const update of tgData.result) {
+          console.log(`[SYNC] Processing update ID: ${update.update_id}`);
+
           if (update.update_id > maxUpdateId) {
             maxUpdateId = update.update_id;
           }
 
-          if (update.message && update.message.reply_to_message) {
-            const originalText = update.message.reply_to_message.text;
-            const adminReplyText = update.message.text;
+          if (!update.message) {
+            console.log(`[SYNC] Update ${update.update_id} has no message. Skipped.`);
+            continue;
+          }
 
-            const match = originalText?.match(/\[SessionID:\s*([a-zA-Z0-9-]+)\]/);
-            if (match && match[1]) {
-              const replySessionId = match[1];
+          if (!update.message.reply_to_message) {
+             console.log(`[SYNC] Update ${update.update_id} is not a reply to another message. Skipped.`);
+             continue;
+          }
 
-              console.log(`Parsed Telegram reply for SessionID: ${replySessionId}`);
+          const originalText = update.message.reply_to_message.text;
+          const adminReplyText = update.message.text;
 
-              // Prevent duplicate insertions
-              const { data: existing, error: selectErr } = await supabase
-                .from('chat_messages')
-                .select('id')
-                .eq('session_id', replySessionId)
-                .eq('sender', 'admin')
-                .eq('message', adminReplyText)
-                .limit(1);
+          console.log(`[SYNC] Original message text from bot: "${originalText?.substring(0, 50)}..."`);
+          console.log(`[SYNC] Admin reply text: "${adminReplyText}"`);
 
-              if (selectErr) console.error("Select error during deduplication:", selectErr);
+          const match = originalText?.match(/\[SessionID:\s*([a-zA-Z0-9-]+)\]/);
+          if (match && match[1]) {
+            const replySessionId = match[1];
+            console.log(`[SYNC] Match success. Extracted SessionID: ${replySessionId}`);
 
-              if (!existing || existing.length === 0) {
-                const payload = {
-                  session_id: replySessionId,
-                  message: adminReplyText,
-                  sender: 'admin',
-                  created_at: new Date(update.message.date * 1000).toISOString()
-                };
-                console.log("Supabase insert payload (Telegram polling -> db):", payload);
+            const { data: existing, error: selectErr } = await supabase
+              .from('chat_messages')
+              .select('id')
+              .eq('session_id', replySessionId)
+              .eq('sender', 'admin')
+              .eq('message', adminReplyText)
+              .limit(1);
 
-                const { data: insertData, error: insertError } = await supabase.from('chat_messages').insert([payload]).select();
-
-                if (insertError) {
-                  console.error("Failed to save admin reply via Polling:", JSON.stringify(insertError, null, 2));
-                } else {
-                  console.log("Supabase insert successful (Telegram polling -> db):", insertData);
-                }
-              }
+            if (selectErr) {
+               console.error(`[SYNC] Select error during deduplication:`, JSON.stringify(selectErr));
             }
+
+            if (!existing || existing.length === 0) {
+              console.log(`[SYNC] No duplicate found. Preparing to insert admin reply.`);
+              const payload = {
+                session_id: replySessionId,
+                message: adminReplyText,
+                sender: 'admin',
+                created_at: new Date(update.message.date * 1000).toISOString()
+              };
+
+              console.log(`[SYNC] Supabase insert payload:`, JSON.stringify(payload));
+
+              const { data: insertData, error: insertError } = await supabase
+                  .from('chat_messages')
+                  .insert([payload])
+                  .select();
+
+              if (insertError) {
+                console.error(`[SYNC] Failed to save admin reply:`, JSON.stringify(insertError, null, 2));
+              } else {
+                console.log(`[SYNC] Successfully inserted admin reply:`, JSON.stringify(insertData));
+              }
+            } else {
+               console.log(`[SYNC] Duplicate admin reply found. Skipped inserting.`);
+            }
+          } else {
+             console.log(`[SYNC] Regex match failed. No SessionID found in original text.`);
           }
         }
 
-        // Acknowledge updates to clear Telegram's queue
+        // Acknowledge updates
         if (maxUpdateId > 0) {
+          console.log(`[SYNC] Clearing Telegram queue offset=${maxUpdateId + 1}`);
           await fetch(`https://api.telegram.org/bot${botToken}/getUpdates?offset=${maxUpdateId + 1}`);
         }
+      } else {
+         console.log(`[SYNC] Telegram API returned 0 updates.`);
       }
+    } else {
+        console.error(`[SYNC] Fetch to Telegram getUpdates failed with status ${tgRes.status}`);
     }
 
-    // Fetch and return the latest messages for this session
+    // Fetch latest messages
     if (sessionId) {
+      console.log(`[SYNC] Fetching latest messages for sessionId: ${sessionId}`);
       const { data, error } = await supabase
         .from('chat_messages')
         .select('*')
         .eq('session_id', sessionId)
         .order('created_at', { ascending: true });
 
-      if (!error && data) {
-        return NextResponse.json({ success: true, messages: data });
+      if (error) {
+         console.error(`[SYNC] Fetch messages error:`, JSON.stringify(error));
+      } else {
+         return NextResponse.json({ success: true, messages: data });
       }
     }
 
     return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error("Sync error:", error);
+  } catch (error: unknown) {
+    console.error(`[SYNC] Uncaught Exception:`, error instanceof Error ? error.message : String(error));
     return NextResponse.json({ success: false, error: "Sync failed" }, { status: 500 });
   }
 }
