@@ -1,0 +1,49 @@
+{
+  "hero": {
+    "title": "LinkedIn Guide for DevOps Engineers",
+    "subtitle": "Optimize your profile to attract tech recruiters and engineering managers."
+  },
+  "sections": [
+    {
+      "title": "Professional Banner",
+      "content": "Use a banner that reflects your technical focus, such as cloud architecture diagrams or a clean, modern tech-themed background."
+    },
+    {
+      "title": "Profile Photo Tips",
+      "content": "Ensure clear lighting, a neutral background, and professional attire. A friendly smile goes a long way."
+    },
+    {
+      "title": "Headline Examples",
+      "content": "Instead of just 'DevOps Engineer', try: 'DevOps Engineer | AWS & Kubernetes | Building Scalable Infrastructure' or 'Cloud Engineer helping teams ship faster with CI/CD'."
+    },
+    {
+      "title": "About Me Examples",
+      "content": "Tell your story. Explain *why* you love infrastructure and automation. Include a summary of your core tech stack and the types of problems you enjoy solving."
+    },
+    {
+      "title": "Experience Examples",
+      "content": "Write your experience like your resume, focusing on impact. Link to company pages and attach media (like architecture diagrams or project links) where possible."
+    },
+    {
+      "title": "Skills Section",
+      "content": "Pin your top 3 technical skills (e.g., Kubernetes, Terraform, AWS). Endorsements matter less than passing LinkedIn Skill Assessments."
+    },
+    {
+      "title": "Networking Tips",
+      "content": "Connect with recruiters, join DevOps groups, and comment thoughtfully on industry posts. Post about what you are currently learning or building."
+    },
+    {
+      "title": "LinkedIn Optimization for Recruiters",
+      "content": "Turn on 'Open to Work'. Ensure your 'Location' is accurate (or set to where you want to work), and use standard job titles so recruiters can find you in search."
+    }
+  ],
+  "beforeAfter": [
+    {
+      "before": "IT Guy",
+      "after": "Cloud & DevOps Engineer | AWS Certified | Automating Deployments"
+    }
+  ],
+  "videos": [
+    { "title": "LinkedIn Profile Review", "url": "https://www.youtube.com/embed/dQw4w9WgXcQ" }
+  ]
+}
