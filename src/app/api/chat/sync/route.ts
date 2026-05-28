@@ -30,7 +30,9 @@ export async function POST(req: Request) {
 
         for (const update of tgData.result) {
           console.log(`[SYNC] Processing update ID: ${update.update_id}`);
-          console.log(`[SYNC] FULL UPDATE OBJECT:`, JSON.stringify(update, null, 2));
+          console.log(`[SYNC] FULL UPDATE:`, JSON.stringify(update, null, 2));
+          console.log(`[SYNC] update.message.text:`, update?.message?.text);
+          console.log(`[SYNC] reply_to_message:`, JSON.stringify(update?.message?.reply_to_message, null, 2));
 
           if (update.update_id > maxUpdateId) {
             maxUpdateId = update.update_id;
@@ -41,16 +43,18 @@ export async function POST(req: Request) {
             continue;
           }
 
-          if (!update.message.reply_to_message) {
-             console.log(`[SYNC] Update ${update.update_id} is not a reply to another message. Skipped.`);
+          // TEMPORARILY DISABLED: Do not require reply_to_message. Accept ANY text message from Telegram.
+          const adminReplyText = update.message.text || update.message.caption || "";
+
+          if (!adminReplyText) {
+             console.log(`[SYNC] No text/caption found in update ${update.update_id}. Skipped.`);
              continue;
           }
 
-          const originalText = update.message.reply_to_message.text || update.message.reply_to_message.caption || "";
-          const adminReplyText = update.message.text || update.message.caption || "";
+          const originalText = update.message.reply_to_message?.text || update.message.reply_to_message?.caption || "";
 
-          console.log(`[SYNC] FULL ORIGINAL TELEGRAM TEXT:`, originalText);
-          console.log(`[SYNC] FULL ADMIN REPLY TEXT:`, adminReplyText);
+          console.log(`[SYNC] originalText:`, originalText);
+          console.log(`[SYNC] adminReplyText:`, adminReplyText);
 
           const match =
             originalText?.match(/\[SessionID:\s*([^\]]+)\]/i) ||
@@ -62,10 +66,9 @@ export async function POST(req: Request) {
             replySessionId = match[1].trim();
             console.log(`[SYNC] Match success. Extracted SessionID: ${replySessionId}`);
           } else {
-             console.log(`[SYNC] Regex match failed. No SessionID found in original text. Using fallback sessionId: ${replySessionId}`);
+             console.log(`[SYNC] Regex match failed or no reply_to_message. Using fallback sessionId: ${replySessionId}`);
           }
 
-          // Always try to insert the admin reply, either with matched ID or fallback ID
           const { data: existing, error: selectErr } = await supabase
             .from('chat_messages')
             .select('id')
@@ -100,43 +103,16 @@ export async function POST(req: Request) {
               console.log(`[SYNC] Successfully inserted admin reply:`, JSON.stringify(insertData));
             }
           } else {
-
              console.log(`[SYNC] Duplicate admin reply found. Skipped inserting.`);
-
-             console.log(`[SYNC] Regex match failed. No SessionID found in original text.`);
- 
-             console.log(`[SYNC] FALLBACK: Inserting message with sessionId from request just in case: ${sessionId}`);
-
-             const payload = {
-                session_id: sessionId,
-                message: adminReplyText,
-                sender: 'admin',
-                created_at: new Date(update.message.date * 1000).toISOString()
-              };
-
-              console.log(`[SYNC] Fallback Supabase insert payload:`, JSON.stringify(payload));
-
-              const { data: insertData, error: insertError } = await supabase
-                  .from('chat_messages')
-                  .insert([payload])
-                  .select();
-
-              if (insertError) {
-                console.error(`[SYNC] Failed to save fallback admin reply:`, JSON.stringify(insertError, null, 2));
-              } else {
-                console.log(`[SYNC] Successfully inserted fallback admin reply:`, JSON.stringify(insertData));
-              }
-
-
-
           }
         }
 
-        // Acknowledge updates
-        if (maxUpdateId > 0) {
-          console.log(`[SYNC] Clearing Telegram queue offset=${maxUpdateId + 1}`);
-          await fetch(`https://api.telegram.org/bot${botToken}/getUpdates?offset=${maxUpdateId + 1}`);
-        }
+        // TEMPORARILY DISABLED: Aggressive Telegram queue clearing offset
+        // if (maxUpdateId > 0) {
+        //   console.log(`[SYNC] Clearing Telegram queue offset=${maxUpdateId + 1}`);
+        //   await fetch(`https://api.telegram.org/bot${botToken}/getUpdates?offset=${maxUpdateId + 1}`);
+        // }
+
       } else {
          console.log(`[SYNC] Telegram API returned 0 updates.`);
       }
@@ -144,33 +120,6 @@ export async function POST(req: Request) {
         console.error(`[SYNC] Fetch to Telegram getUpdates failed with status ${tgRes.status}`);
     }
 
- 
-    // ====== TEMPORARY HARDCODED DEBUG ======
-    // Let's force an admin message insertion to prove whether the Supabase logic or frontend logic is broken.
-    if (sessionId) {
-      console.log(`[SYNC] HARDCODED: Attempting forced direct admin insertion to session ${sessionId}`);
-      const hardcodedPayload = {
-        session_id: sessionId,
-        sender: 'admin',
-        message: 'ADMIN TEST MESSAGE',
-        created_at: new Date().toISOString()
-      };
-
-      const { data: hardcodedData, error: hardcodedError } = await supabase
-        .from('chat_messages')
-        .insert([hardcodedPayload])
-        .select();
-
-      if (hardcodedError) {
-        console.error(`[SYNC] HARDCODED FAIL:`, hardcodedError);
-      } else {
-        console.log(`[SYNC] HARDCODED SUCCESS:`, hardcodedData);
-      }
-    }
-    // 
-
-
- 
     // Fetch latest messages
     if (sessionId) {
       console.log(`[SYNC] Fetching latest messages for sessionId: ${sessionId}`);
