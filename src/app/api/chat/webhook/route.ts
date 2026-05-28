@@ -20,19 +20,24 @@ export async function POST(req: Request) {
       if (match && match[1]) {
         const sessionId = match[1];
 
-        // Save admin reply to Supabase
-        const { error } = await supabase.from('chat_messages').insert([{
+        console.log(`Webhook: Extracted session ${sessionId} from reply.`);
+
+        const dbPayload = {
           session_id: sessionId,
-          name: 'Admin',
           message: adminReplyText,
-          sender_type: 'admin',
+          sender: 'admin',
           created_at: new Date().toISOString()
-        }]);
+        };
+
+        console.log("Supabase insert payload (Telegram webhook -> db):", dbPayload);
+
+        // Save admin reply to Supabase
+        const { data, error } = await supabase.from('chat_messages').insert([dbPayload]).select();
 
         if (error) {
-          console.error("Webhook: Failed to save admin reply to DB", error);
+          console.error("Webhook: Failed to save admin reply to DB", JSON.stringify(error, null, 2));
         } else {
-          console.log(`Webhook: Successfully routed admin reply to session ${sessionId}`);
+          console.log(`Webhook: Successfully inserted admin reply:`, data);
         }
       }
     }

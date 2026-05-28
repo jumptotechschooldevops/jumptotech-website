@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // Check if we have a session
   // We can't use @supabase/supabase-js fully here without complex setup or @supabase/ssr,
   // so we'll look for standard supabase auth cookies or fallback to simple token presence if needed.
