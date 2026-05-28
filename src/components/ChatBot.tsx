@@ -80,6 +80,39 @@ export function ChatBot() {
     }
   }, [messages, isTyping, isOpen]);
 
+  // Fallback Polling if Supabase Realtime is blocked/disabled on the user's DB
+  useEffect(() => {
+    if (!isTyping || !sessionIdRef.current) return;
+
+    const pollForReplies = async () => {
+      try {
+        const res = await fetch('/api/chat/sync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: sessionIdRef.current })
+        });
+
+        const data = await res.json();
+        if (data.success && data.messages) {
+          const fetchedMessages = data.messages as RealtimeChatMessage[];
+          if (fetchedMessages.length > messages.length) {
+            setMessages(fetchedMessages);
+            // Check if any new message is from admin
+            if (fetchedMessages.some(m => m.sender_type === 'admin')) {
+              setIsTyping(false);
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Polling error", e);
+      }
+    };
+
+    const interval = setInterval(pollForReplies, 3000);
+
+    return () => clearInterval(interval);
+  }, [isTyping, messages.length]);
+
   const handleSend = async () => {
     if (!inputValue.trim()) return;
 
