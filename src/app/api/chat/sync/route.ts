@@ -37,23 +37,35 @@ export async function POST(req: Request) {
             if (match && match[1]) {
               const replySessionId = match[1];
 
+              console.log(`Parsed Telegram reply for SessionID: ${replySessionId}`);
+
               // Prevent duplicate insertions
-              const { data: existing } = await supabase
+              const { data: existing, error: selectErr } = await supabase
                 .from('chat_messages')
                 .select('id')
                 .eq('session_id', replySessionId)
-                .eq('sender_type', 'admin')
+                .eq('sender', 'admin')
                 .eq('message', adminReplyText)
                 .limit(1);
 
+              if (selectErr) console.error("Select error during deduplication:", selectErr);
+
               if (!existing || existing.length === 0) {
-                await supabase.from('chat_messages').insert([{
+                const payload = {
                   session_id: replySessionId,
-                  name: 'Admin',
                   message: adminReplyText,
-                  sender_type: 'admin',
+                  sender: 'admin',
                   created_at: new Date(update.message.date * 1000).toISOString()
-                }]);
+                };
+                console.log("Supabase insert payload (Telegram polling -> db):", payload);
+
+                const { data: insertData, error: insertError } = await supabase.from('chat_messages').insert([payload]).select();
+
+                if (insertError) {
+                  console.error("Failed to save admin reply via Polling:", JSON.stringify(insertError, null, 2));
+                } else {
+                  console.log("Supabase insert successful (Telegram polling -> db):", insertData);
+                }
               }
             }
           }

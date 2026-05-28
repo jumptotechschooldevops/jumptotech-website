@@ -15,18 +15,24 @@ export async function POST(req: Request) {
 
     // 1. Save to Supabase
     if (sessionId) {
-      const { error: dbError } = await supabase.from('chat_messages').insert([{
+      const payload = {
         session_id: sessionId,
-        name: studentName || 'Visitor',
-        email: email || '',
+        sender: 'user',
         message: message,
-        sender_type: 'visitor',
         created_at: timestamp || new Date().toISOString()
-      }]);
+      };
+
+      console.log("Supabase insert payload (website -> db):", payload);
+
+      const { data: dbData, error: dbError } = await supabase.from('chat_messages').insert([payload]).select();
 
       if (dbError) {
-        console.error("Failed to save message to Supabase:", dbError);
+        console.error("Failed to save message to Supabase:", JSON.stringify(dbError, null, 2));
+      } else {
+        console.log("Supabase insert successful (website -> db):", dbData);
       }
+    } else {
+      console.error("Missing sessionId in /api/chat/route.ts");
     }
 
     if (!botToken || !chatId) {

@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 
 export type RealtimeChatMessage = {
   id: string;
-  sender_type: "visitor" | "bot" | "admin";
+  sender: "user" | "bot" | "admin";
   message: string;
   created_at: string;
 };
@@ -60,7 +60,7 @@ export function ChatBot() {
         const newMsg = payload.new as RealtimeChatMessage;
         setMessages(prev => {
           // Prevent duplicates if we already added it locally
-          if (prev.some(m => m.id === newMsg.id || (m.message === newMsg.message && m.sender_type === newMsg.sender_type && Math.abs(new Date(m.created_at).getTime() - new Date(newMsg.created_at).getTime()) < 2000))) {
+          if (prev.some(m => m.id === newMsg.id || (m.message === newMsg.message && m.sender === newMsg.sender && Math.abs(new Date(m.created_at).getTime() - new Date(newMsg.created_at).getTime()) < 2000))) {
             return prev;
           }
           setIsTyping(false); // Stop typing indicator if an admin replied
@@ -98,7 +98,7 @@ export function ChatBot() {
           if (fetchedMessages.length > messages.length) {
             setMessages(fetchedMessages);
             // Check if any new message is from admin
-            if (fetchedMessages.some(m => m.sender_type === 'admin')) {
+            if (fetchedMessages.some(m => m.sender === 'admin')) {
               setIsTyping(false);
             }
           }
@@ -122,7 +122,7 @@ export function ChatBot() {
 
     const localMsg: RealtimeChatMessage = {
       id: `local-${Date.now()}`,
-      sender_type: "visitor",
+      sender: "user",
       message: userMessage,
       created_at: new Date().toISOString()
     };
@@ -187,9 +187,9 @@ export function ChatBot() {
             )}
 
             {messages.map((msg, idx) => (
-              <div key={idx} className={`flex ${msg.sender_type === 'visitor' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.sender_type === 'visitor' ? 'bg-[#185FA5] text-white rounded-br-none' : 'bg-[var(--card-bg)] border border-[var(--border)] text-[var(--foreground)] rounded-bl-none'}`}>
-                  {msg.sender_type === "admin" && <div className="text-[10px] text-[#185FA5] font-bold mb-1">Admin</div>}
+              <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.sender === 'user' ? 'bg-[#185FA5] text-white rounded-br-none' : 'bg-[var(--card-bg)] border border-[var(--border)] text-[var(--foreground)] rounded-bl-none'}`}>
+                  {msg.sender === "admin" && <div className="text-[10px] text-[#185FA5] font-bold mb-1">Admin</div>}
                   {msg.message}
                 </div>
               </div>
