@@ -1,17 +1,84 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MessageCircle, X, Send, Loader2 } from "lucide-react";
-import { useAppState } from "@/contexts/AppStateContext";
 import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/lib/supabase";
+
+export type RealtimeChatMessage = {
+  id: string;
+  sender_type: "visitor" | "bot" | "admin";
+  message: string;
+  created_at: string;
+};
 
 export function ChatBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const { chatMessages, addChatMessage } = useAppState();
+  const [messages, setMessages] = useState<RealtimeChatMessage[]>([]);
   const { user, displayName } = useAuth();
+
+  const sessionIdRef = useRef<string>("");
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isTyping, setIsTyping] = useState(false);
+
+  useEffect(() => {
+    // Generate or get unique session ID
+    let sid = localStorage.getItem("jtt_chat_session");
+    if (!sid) {
+      sid = `session-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      localStorage.setItem("jtt_chat_session", sid);
+    }
+    sessionIdRef.current = sid;
+
+    // Load existing messages from Supabase
+    const loadMessages = async () => {
+      const { data, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('session_id', sid)
+        .order('created_at', { ascending: true });
+
+      if (!error && data) {
+        setMessages(data as RealtimeChatMessage[]);
+      }
+    };
+
+    loadMessages();
+
+    // Subscribe to new messages for this session
+    const subscription = supabase
+      .channel(`chat_${sid}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'chat_messages',
+        filter: `session_id=eq.${sid}`
+      }, (payload) => {
+        const newMsg = payload.new as RealtimeChatMessage;
+        setMessages(prev => {
+          // Prevent duplicates if we already added it locally
+          if (prev.some(m => m.id === newMsg.id || (m.message === newMsg.message && m.sender_type === newMsg.sender_type && Math.abs(new Date(m.created_at).getTime() - new Date(newMsg.created_at).getTime()) < 2000))) {
+            return prev;
+          }
+          setIsTyping(false); // Stop typing indicator if an admin replied
+          return [...prev, newMsg];
+        });
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages, isTyping, isOpen]);
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
@@ -20,14 +87,14 @@ export function ChatBot() {
     setInputValue("");
     setErrorMsg(null);
 
-    // Add user message to UI immediately
-    addChatMessage({
-      id: `msg-${Date.now()}`,
-      sender: "user",
-      text: userMessage,
-      timestamp: new Date().toISOString()
-    });
+    const localMsg: RealtimeChatMessage = {
+      id: `local-${Date.now()}`,
+      sender_type: "visitor",
+      message: userMessage,
+      created_at: new Date().toISOString()
+    };
 
+    setMessages(prev => [...prev, localMsg]);
     setIsSending(true);
 
     try {
@@ -35,6 +102,7 @@ export function ChatBot() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          sessionId: sessionIdRef.current,
           message: userMessage,
           timestamp: new Date().toISOString(),
           email: user?.email || "Guest",
@@ -55,32 +123,8 @@ export function ChatBot() {
       setIsSending(false);
     }
 
-    // Process bot auto-response
-    const query = userMessage.toLowerCase();
-    let botResponse = "I've passed this question to our admins! They will see it in their dashboard.";
-
-    if (query.includes("price") || query.includes("cost")) {
-      botResponse = "The bootcamp costs $700/mo or $5,000 total.";
-    } else if (query.includes("duration") || query.includes("how long")) {
-      botResponse = "The program is 7 months long.";
-    } else if (query.includes("start") || query.includes("when")) {
-      botResponse = "Batch 4 starts June 1, 2026!";
-    }
-
-    // Simulate delay for bot reply
-    setTimeout(() => {
-      addChatMessage({
-        id: `msg-${Date.now()}`,
-        sender: "bot",
-        text: botResponse,
-        timestamp: new Date().toISOString()
-      });
-    }, 1000);
+    setIsTyping(true);
   };
-
-  const displayMessages = chatMessages.length > 0
-    ? chatMessages
-    : [{ id: "welcome", sender: "bot" as const, text: "Hi! Have any questions about JumpToTech?", timestamp: new Date().toISOString() }];
 
   return (
     <>
@@ -101,14 +145,33 @@ export function ChatBot() {
           </div>
 
           <div className="flex-1 p-4 overflow-y-auto space-y-3 bg-[var(--background)]">
-            {displayMessages.map((msg, idx) => (
-              <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.sender === 'user' ? 'bg-[#185FA5] text-white rounded-br-none' : 'bg-[var(--card-bg)] border border-[var(--border)] text-[var(--foreground)] rounded-bl-none'}`}>
-                  {msg.sender === "admin" && <div className="text-[10px] text-[#185FA5] font-bold mb-1">Admin</div>}
-                  {msg.text}
+            {messages.length === 0 && (
+              <div className="flex justify-start">
+                <div className="max-w-[80%] p-3 rounded-2xl text-sm bg-[var(--card-bg)] border border-[var(--border)] text-[var(--foreground)] rounded-bl-none">
+                  Hi! Have any questions about JumpToTech?
+                </div>
+              </div>
+            )}
+
+            {messages.map((msg, idx) => (
+              <div key={idx} className={`flex ${msg.sender_type === 'visitor' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.sender_type === 'visitor' ? 'bg-[#185FA5] text-white rounded-br-none' : 'bg-[var(--card-bg)] border border-[var(--border)] text-[var(--foreground)] rounded-bl-none'}`}>
+                  {msg.sender_type === "admin" && <div className="text-[10px] text-[#185FA5] font-bold mb-1">Admin</div>}
+                  {msg.message}
                 </div>
               </div>
             ))}
+
+            {isTyping && (
+              <div className="flex justify-start">
+                <div className="max-w-[80%] p-3 rounded-2xl text-sm bg-[var(--card-bg)] border border-[var(--border)] text-[var(--foreground)] rounded-bl-none flex gap-1 items-center">
+                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.2s" }}></span>
+                  <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0.4s" }}></span>
+                </div>
+              </div>
+            )}
+
             {isSending && (
               <div className="flex justify-end">
                 <div className="text-xs text-[var(--muted)] flex items-center gap-1">
@@ -123,6 +186,7 @@ export function ChatBot() {
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
 
           <div className="p-3 border-t border-[var(--border)] bg-[var(--card-bg)] shrink-0">

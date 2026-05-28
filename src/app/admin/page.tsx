@@ -244,42 +244,18 @@ export default function AdminDashboard() {
         </div>
 
         <div className="bg-[var(--card-bg)] border border-[var(--border)] p-6 rounded-2xl flex flex-col h-full">
-          <h2 className="text-xl font-semibold mb-4 shrink-0">Chatbot Messages (Visitor Q&A)</h2>
-          <div className="space-y-4 flex-1 overflow-y-auto pr-2 mb-4">
-            {chatMessages.length === 0 ? (
-              <p className="text-[var(--muted)] text-sm">No messages yet. (Messages from chatbot will appear here)</p>
-            ) : (
-              chatMessages
-                .map(msg => (
-                  <div key={msg.id} className={`p-3 rounded border border-[var(--border)] ${msg.sender === "admin" ? "bg-[#185FA5]/10 ml-8" : "bg-[var(--background)] mr-8"}`}>
-                    <div className="flex justify-between items-center mb-1">
-                      <p className={`font-medium text-sm ${msg.sender === "admin" ? "text-[#185FA5]" : "text-[#1D9E75]"}`}>{msg.sender === "admin" ? "Admin (You)" : "Visitor"}</p>
-                      <p className="text-xs text-[var(--muted)]">{new Date(msg.timestamp).toLocaleString()}</p>
-                    </div>
-                    <p className="text-sm text-[var(--foreground)]">{msg.text}</p>
-                  </div>
-                ))
-            )}
+          <h2 className="text-xl font-semibold mb-4 shrink-0">Chatbot Dashboard (Telegram Managed)</h2>
+          <div className="space-y-4 flex-1 overflow-y-auto pr-2 mb-4 flex flex-col justify-center items-center text-center">
+            <div className="bg-[#185FA5]/10 border border-[#185FA5]/20 p-6 rounded-2xl max-w-sm">
+              <h3 className="font-bold text-[#185FA5] mb-2">Live Chat is active</h3>
+              <p className="text-sm text-[var(--muted)] mb-4">
+                Visitor messages are now securely forwarded to the designated Telegram group.
+              </p>
+              <p className="text-sm text-[var(--foreground)]">
+                To reply to a student, simply <strong>Reply</strong> to their message directly in Telegram.
+              </p>
+            </div>
           </div>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              const input = e.currentTarget.elements.namedItem("reply") as HTMLInputElement;
-              if (input.value.trim()) {
-                addChatMessage({
-                  id: `msg-${Date.now()}`,
-                  sender: "admin",
-                  text: input.value,
-                  timestamp: new Date().toISOString()
-                });
-                input.value = "";
-              }
-            }}
-            className="flex gap-2 mt-auto pt-4 border-t border-[var(--border)] shrink-0"
-          >
-            <input type="text" name="reply" placeholder="Reply to visitor..." className="flex-1 bg-[var(--background)] border border-[var(--border)] rounded px-3 py-2 text-sm" />
-            <button type="submit" className="bg-[#185FA5] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#185FA5]/90">Reply</button>
-          </form>
         </div>
       </div>
     </div>

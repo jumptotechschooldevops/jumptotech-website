@@ -1,11 +1,33 @@
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+
+// We must create a service role client to insert data from the secure API route
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 export async function POST(req: Request) {
   try {
-    const { message, email, studentName, timestamp } = await req.json();
+    const { sessionId, message, email, studentName, timestamp } = await req.json();
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
+
+    // 1. Save to Supabase
+    if (sessionId) {
+      const { error: dbError } = await supabase.from('chat_messages').insert([{
+        session_id: sessionId,
+        name: studentName || 'Visitor',
+        email: email || '',
+        message: message,
+        sender_type: 'visitor',
+        created_at: timestamp || new Date().toISOString()
+      }]);
+
+      if (dbError) {
+        console.error("Failed to save message to Supabase:", dbError);
+      }
+    }
 
     if (!botToken || !chatId) {
       console.warn("Telegram credentials not configured. Skipping Telegram notification.");
@@ -14,10 +36,11 @@ export async function POST(req: Request) {
 
     const nameStr = studentName ? `Name: ${studentName}\n` : "";
     const emailStr = email ? `Email: ${email}\n` : "";
+    const sessionStr = sessionId ? `[SessionID: ${sessionId}]\n` : "";
     const timeStr = timestamp ? `Time: ${new Date(timestamp).toLocaleString()}\n` : "";
 
     const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
-    const text = `New message from JumpToTech Chatbot:\n\n${nameStr}${emailStr}${timeStr}\nMessage: ${message}`;
+    const text = `New message from JumpToTech Chatbot:\n\n${sessionStr}${nameStr}${emailStr}${timeStr}\nMessage: ${message}`;
 
     const res = await fetch(telegramUrl, {
       method: 'POST',
