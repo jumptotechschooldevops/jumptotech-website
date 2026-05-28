@@ -94,7 +94,7 @@ export async function POST(req: Request) {
             }
           } else {
              console.log(`[SYNC] Regex match failed. No SessionID found in original text.`);
- feature-production-enhancements-16184793430406166303
+ 
              console.log(`[SYNC] FALLBACK: Inserting message with sessionId from request just in case: ${sessionId}`);
 
              const payload = {
@@ -117,7 +117,7 @@ export async function POST(req: Request) {
                 console.log(`[SYNC] Successfully inserted fallback admin reply:`, JSON.stringify(insertData));
               }
 
-main
+
           }
         }
 
@@ -133,7 +133,7 @@ main
         console.error(`[SYNC] Fetch to Telegram getUpdates failed with status ${tgRes.status}`);
     }
 
- feature-production-enhancements-16184793430406166303
+ 
     // ====== TEMPORARY HARDCODED DEBUG ======
     // Let's force an admin message insertion to prove whether the Supabase logic or frontend logic is broken.
     if (sessionId) {
@@ -159,7 +159,7 @@ main
     // 
 
 
- main
+ 
     // Fetch latest messages
     if (sessionId) {
       console.log(`[SYNC] Fetching latest messages for sessionId: ${sessionId}`);
