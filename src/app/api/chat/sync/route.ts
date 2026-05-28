@@ -94,6 +94,30 @@ export async function POST(req: Request) {
             }
           } else {
              console.log(`[SYNC] Regex match failed. No SessionID found in original text.`);
+ feature-production-enhancements-16184793430406166303
+             console.log(`[SYNC] FALLBACK: Inserting message with sessionId from request just in case: ${sessionId}`);
+
+             const payload = {
+                session_id: sessionId,
+                message: adminReplyText,
+                sender: 'admin',
+                created_at: new Date(update.message.date * 1000).toISOString()
+              };
+
+              console.log(`[SYNC] Fallback Supabase insert payload:`, JSON.stringify(payload));
+
+              const { data: insertData, error: insertError } = await supabase
+                  .from('chat_messages')
+                  .insert([payload])
+                  .select();
+
+              if (insertError) {
+                console.error(`[SYNC] Failed to save fallback admin reply:`, JSON.stringify(insertError, null, 2));
+              } else {
+                console.log(`[SYNC] Successfully inserted fallback admin reply:`, JSON.stringify(insertData));
+              }
+
+main
           }
         }
 
@@ -109,6 +133,33 @@ export async function POST(req: Request) {
         console.error(`[SYNC] Fetch to Telegram getUpdates failed with status ${tgRes.status}`);
     }
 
+ feature-production-enhancements-16184793430406166303
+    // ====== TEMPORARY HARDCODED DEBUG ======
+    // Let's force an admin message insertion to prove whether the Supabase logic or frontend logic is broken.
+    if (sessionId) {
+      console.log(`[SYNC] HARDCODED: Attempting forced direct admin insertion to session ${sessionId}`);
+      const hardcodedPayload = {
+        session_id: sessionId,
+        sender: 'admin',
+        message: 'ADMIN TEST MESSAGE',
+        created_at: new Date().toISOString()
+      };
+
+      const { data: hardcodedData, error: hardcodedError } = await supabase
+        .from('chat_messages')
+        .insert([hardcodedPayload])
+        .select();
+
+      if (hardcodedError) {
+        console.error(`[SYNC] HARDCODED FAIL:`, hardcodedError);
+      } else {
+        console.log(`[SYNC] HARDCODED SUCCESS:`, hardcodedData);
+      }
+    }
+    // 
+
+
+ main
     // Fetch latest messages
     if (sessionId) {
       console.log(`[SYNC] Fetching latest messages for sessionId: ${sessionId}`);
