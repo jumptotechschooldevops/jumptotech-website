@@ -27,6 +27,7 @@ export function Navbar() {
     { href: "/student-projects", label: lang === "ru" ? "Проекты студентов" : "Student Projects" },
     { href: "/founder", label: lang === "ru" ? "Основатель" : "Founder" },
     { href: "/certifications", label: lang === "ru" ? "Сертификаты" : "Certifications" },
+    { href: "/admin/projects", label: lang === "ru" ? "Админ" : "Admin" },
   ];
 
   return (
@@ -47,19 +48,21 @@ export function Navbar() {
 
           {/* Desktop nav */}
           <div className="hidden md:flex items-center gap-4">
-            {links.map((l) => (
+            {links.map((l) => {
+              const isActive = pathname === l.href || (l.href === '/admin/projects' && pathname.startsWith('/admin'));
+              return (
               <Link
                 key={l.href}
                 href={l.href}
                 className={`text-sm font-medium transition-colors ${
-                  pathname === l.href
+                  isActive
                     ? "text-[var(--primary)]"
                     : "text-[var(--muted)] hover:text-[var(--foreground)]"
                 }`}
               >
                 {l.label}
               </Link>
-            ))}
+            )})}
 
             <button
               onClick={toggleLang}
@@ -121,20 +124,22 @@ export function Navbar() {
         {/* Mobile menu */}
         {open && (
           <div className="md:hidden border-t border-[var(--border)] py-3 space-y-1">
-            {links.map((l) => (
+            {links.map((l) => {
+              const isActive = pathname === l.href || (l.href === '/admin/projects' && pathname.startsWith('/admin'));
+              return (
               <Link
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
                 className={`block px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  pathname === l.href
+                  isActive
                     ? "bg-[var(--primary)]/10 text-[var(--primary)]"
                     : "text-[var(--muted)] hover:bg-[var(--muted-bg)]"
                 }`}
               >
                 {l.label}
               </Link>
-            ))}
+            )})}
             {mounted && loggedIn ? (
               <>
                 <Link

@@ -45,7 +45,9 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     if (authMounted && (!loggedIn || role !== "admin")) {
-      router.push("/");
+      router.push("/login");
+    } else if (authMounted && loggedIn && role === "admin") {
+      router.push("/admin/projects");
     }
   }, [authMounted, loggedIn, role, router]);
 
