@@ -1,39 +1,5 @@
 "use client";
 
-/*
- * Run this SQL in Supabase SQL editor before using this dashboard:
- *
- * -- Profiles table (students):
- * CREATE TABLE IF NOT EXISTS profiles (
- *   id UUID PRIMARY KEY,
- *   full_name TEXT,
- *   email TEXT,
- *   phone TEXT,
- *   experience_level TEXT,
- *   how_heard TEXT,
- *   created_at TIMESTAMPTZ DEFAULT NOW()
- * );
- * ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
- * CREATE POLICY "Admin can read all profiles" ON profiles FOR SELECT USING (true);
- * CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT WITH CHECK (true);
- *
- * -- Lectures table:
- * CREATE TABLE IF NOT EXISTS lectures (
- *   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
- *   module_slug TEXT NOT NULL,
- *   title TEXT NOT NULL,
- *   description TEXT,
- *   content TEXT,
- *   duration TEXT DEFAULT '30 min',
- *   type TEXT DEFAULT 'reading',
- *   order_index INTEGER DEFAULT 0,
- *   created_at TIMESTAMPTZ DEFAULT NOW()
- * );
- * ALTER TABLE lectures ENABLE ROW LEVEL SECURITY;
- * CREATE POLICY "Anyone can read lectures" ON lectures FOR SELECT USING (true);
- * CREATE POLICY "Admin can manage lectures" ON lectures FOR ALL USING (true);
- */
-
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
