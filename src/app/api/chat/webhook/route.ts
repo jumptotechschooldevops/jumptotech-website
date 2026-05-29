@@ -8,6 +8,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 export async function POST(req: Request) {
   try {
     const payload = await req.json();
+    console.log("Webhook received payload:", JSON.stringify(payload, null, 2));
 
     // Check if this is a valid message
     if (payload.message && payload.message.reply_to_message) {
@@ -37,8 +38,10 @@ export async function POST(req: Request) {
         if (error) {
           console.error("Webhook: Failed to save admin reply to DB", JSON.stringify(error, null, 2));
         } else {
-          console.log(`Webhook: Successfully inserted admin reply:`, data);
+          console.log(`Webhook: Successfully inserted admin reply:`, JSON.stringify(data, null, 2));
         }
+      } else {
+        console.log("Failed to extract SessionID from:", originalText);
       }
     }
 

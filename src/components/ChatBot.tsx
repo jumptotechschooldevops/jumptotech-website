@@ -57,6 +57,7 @@ export function ChatBot() {
         table: 'chat_messages',
         filter: `session_id=eq.${sid}`
       }, (payload) => {
+        console.log("Supabase Realtime Payload:", payload);
         const newMsg = payload.new as RealtimeChatMessage;
         setMessages(prev => {
           // Prevent duplicates if we already added it locally
@@ -93,6 +94,7 @@ export function ChatBot() {
         });
 
         const data = await res.json();
+        console.log("Polling API Response:", data);
         if (data.success && data.messages) {
           const fetchedMessages = data.messages as RealtimeChatMessage[];
           if (fetchedMessages.length > messages.length) {
@@ -186,14 +188,16 @@ export function ChatBot() {
               </div>
             )}
 
-            {messages.map((msg, idx) => (
+            {messages.map((msg, idx) => {
+              console.log("Rendering message:", msg);
+              return (
               <div key={idx} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[80%] p-3 rounded-2xl text-sm ${msg.sender === 'user' ? 'bg-[#185FA5] text-white rounded-br-none' : 'bg-[var(--card-bg)] border border-[var(--border)] text-[var(--foreground)] rounded-bl-none'}`}>
                   {msg.sender === "admin" && <div className="text-[10px] text-[#185FA5] font-bold mb-1">Admin</div>}
                   {msg.message}
                 </div>
               </div>
-            ))}
+            )})}
 
             {isTyping && (
               <div className="flex justify-start">
