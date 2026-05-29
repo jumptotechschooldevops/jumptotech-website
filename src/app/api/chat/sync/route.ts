@@ -132,6 +132,7 @@ export async function POST(req: Request) {
       if (error) {
          console.error(`[SYNC] Fetch messages error:`, JSON.stringify(error));
       } else {
+         console.log(`[SYNC] Final fetch messages result:`, JSON.stringify(data));
          return NextResponse.json({ success: true, messages: data });
       }
     }
