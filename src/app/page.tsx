@@ -5,6 +5,7 @@ import { RegistrationForm } from "@/components/RegistrationForm";
 import { CommunityPhotos } from "@/components/CommunityPhotos";
 import { SuccessStories } from "@/components/SuccessStories";
 import { FAQ } from "@/components/FAQ";
+import { FeaturedProjects } from "@/components/FeaturedProjects";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   Users,
@@ -139,6 +140,9 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* FEATURED PROJECTS */}
+      <FeaturedProjects />
 
       {/* STATS BAR */}
       <section className="bg-[var(--card-bg)] border-y border-[var(--border)]">

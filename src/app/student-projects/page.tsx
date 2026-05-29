@@ -5,21 +5,41 @@ import { Footer } from "@/components/Footer";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { ProjectCard, ProjectProps } from "@/components/ProjectCard";
 import { Search, SlidersHorizontal } from "lucide-react";
-import { useState } from "react";
-
-import projectsData from "@/content/projects.json";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import type { StudentProject } from "@/types/supabase-projects";
 
 export default function StudentProjectsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All");
+  const [projects, setProjects] = useState<StudentProject[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const categories = ["All", ...projectsData.categories];
+  useEffect(() => {
+    const fetchProjects = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('student_projects')
+        .select('*')
+        .eq('published', true)
+        .order('created_at', { ascending: false });
 
-  const filteredProjects = projectsData.projects.filter((project: ProjectProps) => {
+      if (!error && data) {
+        setProjects(data as StudentProject[]);
+      }
+      setLoading(false);
+    };
+    fetchProjects();
+  }, []);
+
+  const categories = ["All", "AWS", "Linux", "Docker", "Kubernetes", "Terraform", "Jenkins", "GitHub Actions", "Python", "DevOps", "Cloud", "AI"];
+
+  const filteredProjects = projects.filter(project => {
     const matchesSearch =
       project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.student_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       project.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.technologies.some(tech => tech.toLowerCase().includes(searchQuery.toLowerCase()));
+      (project.technologies || []).some(tech => tech.toLowerCase().includes(searchQuery.toLowerCase()));
 
     const matchesCategory = activeCategory === "All" || project.category === activeCategory;
 
@@ -81,10 +101,12 @@ export default function StudentProjectsPage() {
           </div>
 
           {/* PROJECT GRID */}
-          {filteredProjects.length > 0 ? (
+          {loading ? (
+            <div className="text-center py-20 text-[var(--muted)]">Loading projects...</div>
+          ) : filteredProjects.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {filteredProjects.map((project: ProjectProps) => (
-                <ProjectCard key={project.id} project={project} />
+              {filteredProjects.map((project: StudentProject) => (
+                <ProjectCard key={project.id} project={project as unknown as StudentProject} />
               ))}
             </div>
           ) : (
