@@ -8,7 +8,7 @@ import { Plus, Edit2, Trash2, Eye, EyeOff, Star, UploadCloud, X, FileVideo, File
 import type { StudentProject } from "@/types/supabase-projects";
 
 export default function AdminProjectsPage() {
-  const { user, authMounted } = useAuth();
+  const { user, authMounted, role } = useAuth();
   const router = useRouter();
 
   const [projects, setProjects] = useState<StudentProject[]>([]);
@@ -19,9 +19,6 @@ export default function AdminProjectsPage() {
   const [currentProject, setCurrentProject] = useState<Partial<StudentProject> | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
-
-
-
 
   const fetchProjects = async () => {
     setIsFetching(true);
@@ -67,8 +64,6 @@ export default function AdminProjectsPage() {
       const urlParts = fileUrl.split('/');
       const fileName = urlParts[urlParts.length - 1];
 
-      // We don't necessarily know the exact folder path if it's deeply nested,
-      // but based on upload logic filePath = `${Date.now()}-${fileName}` in root of bucket
       const filePath = fileName;
 
       const { error } = await supabase.storage.from(bucket).remove([filePath]);
@@ -194,7 +189,7 @@ export default function AdminProjectsPage() {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!user || !user.email?.includes("admin")) {
+  if (role !== "admin") {
     console.log("Access Denied Redirect Reason: User not logged in or not admin in projects page.");
     return (
       <div className="min-h-screen bg-[var(--background)] flex flex-col items-center justify-center p-4">

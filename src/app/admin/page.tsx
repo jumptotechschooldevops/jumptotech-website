@@ -100,9 +100,6 @@ export default function AdminPage() {
   const [search, setSearch] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
-
-
-
   const [sortAsc, setSortAsc] = useState(false);
 
   // ── Students ───────────────────────────────────────────────────────────
@@ -173,9 +170,7 @@ export default function AdminPage() {
   const filtered = students
     .filter((s) => {
       const q = search.toLowerCase();
-
-
-  return (
+      return (
         (s.full_name ?? "").toLowerCase().includes(q) ||
         (s.email ?? "").toLowerCase().includes(q)
       );

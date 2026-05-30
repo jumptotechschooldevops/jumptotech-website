@@ -26,7 +26,7 @@ export function useAuth() {
     setUser(null);
   };
 
-  const role = user?.email?.includes("admin") ? "admin" : (user ? "student" : "visitor");
+  const role = (user?.email?.includes("admin") || user?.email?.includes("lina")) ? "admin" : (user ? "student" : "visitor");
 
   return {
     user,

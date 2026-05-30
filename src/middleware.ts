@@ -20,7 +20,6 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
 
-
   // Protect /student
   if (path.startsWith('/student')) {
     if (!isAuth) {
