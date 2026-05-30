@@ -19,15 +19,6 @@ export async function middleware(request: NextRequest) {
   // Basic route protection mapping
   const path = request.nextUrl.pathname;
 
-  // Protect /admin
-  if (path.startsWith('/admin')) {
-    if (!isAuth) {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-    // We cannot easily determine role "admin" vs "student" securely in Edge middleware without decrypting JWT or a DB call.
-    // So we'll ensure they are logged in. The client-side admin page already strictly checks role.
-    // However, if we parse the JWT we could check the email.
-  }
 
   // Protect /student
   if (path.startsWith('/student')) {
