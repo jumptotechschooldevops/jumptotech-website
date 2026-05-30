@@ -156,8 +156,8 @@ export default function ProjectDetailsPage() {
                     </a>
                   )}
                   {project.documentation_url && (
-                    <a href={project.documentation_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#1D9E75] hover:underline font-medium">
-                      <ExternalLink size={20} /> Documentation PDF
+                    <a href={project.documentation_url} download target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-[#1D9E75] hover:underline font-medium bg-[#1D9E75]/10 px-4 py-2 rounded-lg transition-colors hover:bg-[#1D9E75]/20">
+                      <ExternalLink size={20} /> Download Documentation
                     </a>
                   )}
                 </div>

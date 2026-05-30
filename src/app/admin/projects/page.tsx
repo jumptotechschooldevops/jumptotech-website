@@ -57,6 +57,43 @@ export default function AdminProjectsPage() {
     }
   };
 
+
+  const deleteUploadedFile = async (bucket: string, fileUrl: string, fieldName: keyof StudentProject, isArray: boolean = false) => {
+    try {
+      // Extract file path from URL
+      const urlParts = fileUrl.split('/');
+      const fileName = urlParts[urlParts.length - 1];
+
+      // We don't necessarily know the exact folder path if it's deeply nested,
+      // but based on upload logic filePath = `${Date.now()}-${fileName}` in root of bucket
+      const filePath = fileName;
+
+      const { error } = await supabase.storage.from(bucket).remove([filePath]);
+
+      if (error) {
+        console.error("Error deleting file:", error);
+        alert(`Failed to delete file: ${error.message}`);
+        return;
+      }
+
+      // Update state
+      setCurrentProject(prev => {
+        if (!prev) return prev;
+
+        if (isArray) {
+          const existing = (prev[fieldName] as string[]) || [];
+          return { ...prev, [fieldName]: existing.filter(url => url !== fileUrl) };
+        } else {
+          return { ...prev, [fieldName]: null };
+        }
+      });
+
+    } catch (err) {
+      console.error("Delete exception:", err);
+    }
+  };
+
+
   const toggleFeatured = async (id: string, currentStatus: boolean) => {
     const { error } = await supabase.from('student_projects').update({ featured: !currentStatus }).eq('id', id);
     if (!error) {
@@ -86,7 +123,7 @@ export default function AdminProjectsPage() {
 
       if (uploadError) {
         console.error("Upload error:", uploadError);
-        alert(`Failed to upload ${file.name}`);
+        alert(`Failed to upload ${file.name}: ${uploadError.message || JSON.stringify(uploadError)}`);
         setUploadProgress(prev => ({ ...prev, [file.name]: 0 }));
         continue;
       }
@@ -296,7 +333,12 @@ export default function AdminProjectsPage() {
                         <span className="text-sm font-medium">Upload Thumbnail (JPG/PNG)</span>
                         <input type="file" className="hidden" accept="image/*" onChange={e => handleFileUpload(e, 'student-project-images', 'thumbnail_url')} />
                       </label>
-                      {currentProject?.thumbnail_url && <div className="mt-2 text-xs text-green-600 truncate">Uploaded: {currentProject.thumbnail_url}</div>}
+                      {currentProject?.thumbnail_url && (
+                        <div className="mt-2 flex items-center justify-between text-xs text-green-600">
+                          <span className="truncate mr-2">Uploaded</span>
+                          <button type="button" onClick={(e) => { e.preventDefault(); deleteUploadedFile('student-project-images', currentProject.thumbnail_url!, 'thumbnail_url', false); }} className="text-red-500 hover:text-red-700 flex items-center"><X size={14} className="mr-1"/> Remove</button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Screenshots */}
@@ -306,7 +348,16 @@ export default function AdminProjectsPage() {
                         <span className="text-sm font-medium">Upload Screenshots (Multiple)</span>
                         <input type="file" className="hidden" multiple accept="image/*" onChange={e => handleFileUpload(e, 'student-project-images', 'screenshot_urls', true)} />
                       </label>
-                      {currentProject?.screenshot_urls?.length ? <div className="mt-2 text-xs text-green-600 truncate">{currentProject.screenshot_urls.length} images uploaded</div> : null}
+                      {currentProject?.screenshot_urls?.length ? (
+                        <div className="mt-2 text-xs text-green-600 flex flex-col gap-1">
+                          {currentProject.screenshot_urls.map((url, i) => (
+                            <div key={i} className="flex items-center justify-between">
+                              <span className="truncate mr-2">Image {i+1}</span>
+                              <button type="button" onClick={(e) => { e.preventDefault(); deleteUploadedFile('student-project-images', url, 'screenshot_urls', true); }} className="text-red-500 hover:text-red-700 flex items-center"><X size={14} className="mr-1"/> Remove</button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
 
                     {/* Videos */}
@@ -316,7 +367,16 @@ export default function AdminProjectsPage() {
                         <span className="text-sm font-medium">Upload Videos (MP4/MOV)</span>
                         <input type="file" className="hidden" multiple accept="video/*" onChange={e => handleFileUpload(e, 'student-project-videos', 'video_urls', true)} />
                       </label>
-                      {currentProject?.video_urls?.length ? <div className="mt-2 text-xs text-green-600 truncate">{currentProject.video_urls.length} videos uploaded</div> : null}
+                      {currentProject?.video_urls?.length ? (
+                        <div className="mt-2 text-xs text-green-600 flex flex-col gap-1">
+                          {currentProject.video_urls.map((url, i) => (
+                            <div key={i} className="flex items-center justify-between">
+                              <span className="truncate mr-2">Video {i+1}</span>
+                              <button type="button" onClick={(e) => { e.preventDefault(); deleteUploadedFile('student-project-videos', url, 'video_urls', true); }} className="text-red-500 hover:text-red-700 flex items-center"><X size={14} className="mr-1"/> Remove</button>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
                     </div>
 
                     {/* PDF Documentation */}
@@ -326,7 +386,12 @@ export default function AdminProjectsPage() {
                         <span className="text-sm font-medium">Upload Documentation (PDF)</span>
                         <input type="file" className="hidden" accept="application/pdf" onChange={e => handleFileUpload(e, 'student-project-documents', 'documentation_url')} />
                       </label>
-                      {currentProject?.documentation_url && <div className="mt-2 text-xs text-green-600 truncate">Uploaded: {currentProject.documentation_url}</div>}
+                      {currentProject?.documentation_url && (
+                        <div className="mt-2 flex items-center justify-between text-xs text-green-600">
+                          <span className="truncate mr-2">Uploaded Document</span>
+                          <button type="button" onClick={(e) => { e.preventDefault(); deleteUploadedFile('student-project-documents', currentProject.documentation_url!, 'documentation_url', false); }} className="text-red-500 hover:text-red-700 flex items-center"><X size={14} className="mr-1"/> Remove</button>
+                        </div>
+                      )}
                     </div>
                   </div>
 
