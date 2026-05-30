@@ -110,7 +110,7 @@ export default function AdminPage() {
     try {
       const res = await fetch("/api/admin/students", {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem('supabase.auth.token') || ''}` // Adjust as needed if tokens are handled via cookies.
+          Authorization: `Bearer ${((await supabase.auth.getSession()).data.session?.access_token) || ''}`
         }
       });
       const json = await res.json();
