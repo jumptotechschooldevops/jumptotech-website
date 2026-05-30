@@ -124,16 +124,8 @@ export default function AdminPage() {
   }, []);
 
   useEffect(() => {
-    if (authMounted && (!loggedIn || role !== "admin")) {
-      router.push("/login");
-    } else if (authMounted && loggedIn && role === "admin") {
-      fetchStudents();
-    }
-  }, [authMounted, loggedIn, role, router, fetchStudents]);
-
-  if (!authMounted || !loggedIn || role !== "admin") {
-    return <div className="p-20 text-center">Loading...</div>;
-  }
+    fetchStudents();
+  }, [fetchStudents]);
 
   // ── Student helpers ────────────────────────────────────────────────────
 
