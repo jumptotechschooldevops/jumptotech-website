@@ -20,15 +20,7 @@ export default function AdminProjectsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
 
-  useEffect(() => {
-    if (authMounted) {
-      if (!user || (!user.email?.includes("admin"))) {
-        router.push("/");
-      }
-    }
-  }, [user, authMounted, router]);
 
-  if (!authMounted || !user || !user.email?.includes("admin")) return null;
 
 
   const fetchProjects = async () => {
@@ -196,6 +188,27 @@ export default function AdminProjectsPage() {
     }
     setIsSaving(false);
   };
+
+
+  if (!authMounted) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!user || !user.email?.includes("admin")) {
+    console.log("Access Denied Redirect Reason: User not logged in or not admin in projects page.");
+    return (
+      <div className="min-h-screen bg-[var(--background)] flex flex-col items-center justify-center p-4">
+        <div className="text-red-500 mb-6 text-6xl">🛡️</div>
+        <h1 className="text-4xl font-bold text-[var(--foreground)] mb-4">Access Denied</h1>
+        <p className="text-[var(--muted)] mb-8 text-center max-w-md">
+          You do not have the required permissions to manage student projects.
+        </p>
+        <button onClick={() => router.push("/")} className="px-6 py-3 bg-[#185FA5] text-white rounded-xl font-medium hover:bg-[#185FA5]/90 transition-colors">
+          Return Home
+        </button>
+      </div>
+    );
+  }
 
   if (isFetching) return <div className="p-10 text-center">Loading Admin...</div>;
 

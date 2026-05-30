@@ -21,13 +21,6 @@ export async function middleware(request: NextRequest) {
 
 
 
-  // Protect /admin
-  if (path.startsWith('/admin')) {
-    if (!isAuth) {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-  }
-
   // Protect /student
   if (path.startsWith('/student')) {
     if (!isAuth) {

@@ -100,6 +100,9 @@ export default function AdminPage() {
   const [search, setSearch] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("created_at");
+
+
+
   const [sortAsc, setSortAsc] = useState(false);
 
   // ── Students ───────────────────────────────────────────────────────────
@@ -170,7 +173,9 @@ export default function AdminPage() {
   const filtered = students
     .filter((s) => {
       const q = search.toLowerCase();
-      return (
+
+
+  return (
         (s.full_name ?? "").toLowerCase().includes(q) ||
         (s.email ?? "").toLowerCase().includes(q)
       );
@@ -192,6 +197,27 @@ export default function AdminPage() {
     "px-4 py-3 text-left text-xs font-semibold text-[var(--muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--foreground)] select-none whitespace-nowrap";
 
   // ── Dashboard ──────────────────────────────────────────────────────────
+
+
+  if (!authMounted) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
+
+  if (!loggedIn || role !== "admin") {
+    console.log("Access Denied Redirect Reason: User not logged in or not admin. role:", role);
+    return (
+      <div className="min-h-screen bg-[var(--background)] flex flex-col items-center justify-center p-4">
+        <Shield size={64} className="text-red-500 mb-6" />
+        <h1 className="text-4xl font-bold text-[var(--foreground)] mb-4">Access Denied</h1>
+        <p className="text-[var(--muted)] mb-8 text-center max-w-md">
+          You do not have the required permissions to view this page. Please log in with an administrator account.
+        </p>
+        <button onClick={() => router.push("/")} className="px-6 py-3 bg-[#185FA5] text-white rounded-xl font-medium hover:bg-[#185FA5]/90 transition-colors">
+          Return Home
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[var(--background)] px-4 py-8">
