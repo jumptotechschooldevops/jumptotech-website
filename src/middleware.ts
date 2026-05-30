@@ -20,6 +20,14 @@ export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname;
 
 
+
+  // Protect /admin
+  if (path.startsWith('/admin')) {
+    if (!isAuth) {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+  }
+
   // Protect /student
   if (path.startsWith('/student')) {
     if (!isAuth) {

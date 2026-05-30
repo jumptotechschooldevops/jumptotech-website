@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function POST() {
   try {
-    const bucketsToEnsure = ['student-project-images', 'student-project-documents'];
+    const bucketsToEnsure = ['student-project-images', 'student-project-documents', 'student-project-videos'];
     const results: string[] = [];
 
     const { data: existingBuckets, error: listError } = await supabaseAdmin.storage.listBuckets();

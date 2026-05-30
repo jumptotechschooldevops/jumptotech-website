@@ -20,6 +20,17 @@ export default function AdminProjectsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
 
+  useEffect(() => {
+    if (authMounted) {
+      if (!user || (!user.email?.includes("admin"))) {
+        router.push("/");
+      }
+    }
+  }, [user, authMounted, router]);
+
+  if (!authMounted || !user || !user.email?.includes("admin")) return null;
+
+
   const fetchProjects = async () => {
     setIsFetching(true);
     const { data, error } = await supabase
