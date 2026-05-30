@@ -26,7 +26,13 @@ export function useAuth() {
     setUser(null);
   };
 
-  const role = (user?.email?.includes("admin") || user?.email?.includes("lina")) ? "admin" : (user ? "student" : "visitor");
+  const role = (user?.email?.includes("admin") || user?.email === "aila@gmail.com") ? "admin" : (user ? "student" : "visitor");
+
+  if (mounted) {
+    console.log("Auth Debug: current user email:", user?.email);
+    console.log("Auth Debug: current user id:", user?.id);
+    console.log("Auth Debug: calculated isAdmin value:", role === "admin");
+  }
 
   return {
     user,

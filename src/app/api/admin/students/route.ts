@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   const token = authHeader.replace('Bearer ', '')
   const { data: { user } } = await supabase.auth.getUser(token)
 
-  if (!user || !user.email || (!user.email.includes("admin") && !user.email.includes("lina") && user.email !== "aisalkynaidarova8@gmail.com")) {
+  if (!user || !user.email || (!user.email.includes("admin") && user.email !== "aila@gmail.com" && user.email !== "aisalkynaidarova8@gmail.com")) {
      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
