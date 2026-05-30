@@ -11,9 +11,13 @@ DROP POLICY IF EXISTS "Public Access" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can upload objects" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can update objects" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can delete objects" ON storage.objects;
+DROP POLICY IF EXISTS "Public Select Access" ON storage.objects;
+DROP POLICY IF EXISTS "Public Insert Access" ON storage.objects;
+DROP POLICY IF EXISTS "Public Update Access" ON storage.objects;
+DROP POLICY IF EXISTS "Public Delete Access" ON storage.objects;
 
--- Create explicit policies for the specific buckets
-CREATE POLICY "Public Access"
+-- Create explicit secure policies
+CREATE POLICY "Public Select Access"
 ON storage.objects FOR SELECT
 USING (bucket_id IN ('student-project-images', 'student-project-documents', 'student-project-videos'));
 
