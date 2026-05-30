@@ -36,13 +36,8 @@ export default function AdminProjectsPage() {
   };
 
   useEffect(() => {
-    if (!authMounted) return;
-    if (!user) {
-      router.push("/login");
-    } else {
-      fetchProjects();
-    }
-  }, [user, authMounted, router]);
+    fetchProjects();
+  }, []);
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this project?")) return;
@@ -154,7 +149,7 @@ export default function AdminProjectsPage() {
     setIsSaving(false);
   };
 
-  if (!authMounted || isFetching) return <div className="p-10 text-center">Loading Admin...</div>;
+  if (isFetching) return <div className="p-10 text-center">Loading Admin...</div>;
 
   return (
     <div className="p-8 max-w-7xl mx-auto min-h-screen bg-[var(--background)]">
