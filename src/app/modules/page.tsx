@@ -3,16 +3,19 @@
 import { ModuleCard } from "@/components/ModuleCard";
 import { useAllProgress } from "@/hooks/useProgress";
 import { useAuth } from "@/hooks/useAuth";
-import { useAppState } from "@/contexts/AppStateContext";
 import { BookOpen, FlaskConical, Clock } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { DbModule } from "@/types/supabase-modules";
 
 export default function ModulesPage() {
   const { getModulePercent, mounted } = useAllProgress();
   const { loggedIn, mounted: authMounted } = useAuth();
   const router = useRouter();
-  const { modulesData } = useAppState();
+
+  const [modulesData, setModulesData] = useState<DbModule[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (authMounted && !loggedIn) {
@@ -20,11 +23,38 @@ export default function ModulesPage() {
     }
   }, [authMounted, loggedIn, router]);
 
-  const totalLectures = modulesData.reduce((s, m) => s + m.lectureCount, 0);
-  const totalLabs = modulesData.reduce((s, m) => s + m.labCount, 0);
-  const totalHours = modulesData.reduce((s, m) => s + m.totalHours, 0);
+  useEffect(() => {
+    const fetchModules = async () => {
+      const { data, error } = await supabase
+        .from('modules')
+        .select('*')
+        .eq('published', true)
+        .order('order_index', { ascending: true });
+
+      if (!error && data) {
+        // Fetch lecture and lab counts
+        const mods = await Promise.all(data.map(async (m) => {
+          const { count: lectureCount } = await supabase.from('lectures').select('*', { count: 'exact', head: true }).eq('module_id', m.id).eq('published', true);
+          const { count: labCount } = await supabase.from('labs').select('*', { count: 'exact', head: true }).eq('module_id', m.id).eq('published', true);
+          return {
+            ...m,
+            lectureCount: lectureCount || 0,
+            labCount: labCount || 0,
+          };
+        }));
+        setModulesData(mods);
+      }
+      setLoading(false);
+    };
+    fetchModules();
+  }, []);
+
+  const totalLectures = modulesData.reduce((s, m) => s + (m.lectureCount || 0), 0);
+  const totalLabs = modulesData.reduce((s, m) => s + (m.labCount || 0), 0);
+  const totalHours = modulesData.reduce((s, m) => s + m.total_hours, 0);
 
   if (!authMounted || !loggedIn) return null;
+  if (loading) return <div className="p-12 text-center text-[var(--muted)]">Loading modules...</div>;
 
   return (
     <div className="bg-[var(--background)]">
@@ -61,8 +91,22 @@ export default function ModulesPage() {
           {modulesData.map((mod) => (
             <ModuleCard
               key={mod.id}
-              module={mod}
-              progress={mounted ? getModulePercent(mod.id, mod.lectureCount, mod.labCount) : 0}
+              module={{
+                id: mod.id,
+                slug: mod.slug,
+                title: mod.title,
+                icon: mod.icon,
+                description: mod.description,
+                color: mod.color,
+                coverImage: mod.cover_image,
+                lectureCount: mod.lectureCount || 0,
+                labCount: mod.labCount || 0,
+                totalHours: mod.total_hours,
+                mkdocsUrl: "", // deprecated
+                lectures: [],
+                labs: [],
+              }}
+              progress={mounted ? getModulePercent(mod.id, mod.lectureCount || 0, mod.labCount || 0) : 0}
             />
           ))}
         </div>
