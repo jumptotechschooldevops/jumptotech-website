@@ -28,7 +28,9 @@ export async function middleware(request: NextRequest) {
   }
 
   // Protect /modules/[slug]/[lectureId] (course content)
-  if (path.startsWith('/modules/') && path.split('/').length > 3) {
+  // Use robust segment parsing to handle trailing slashes correctly
+  const pathSegments = path.split('/').filter(Boolean);
+  if (pathSegments.length > 0 && pathSegments[0] === 'modules' && pathSegments.length > 2) {
     if (!isAuth) {
       return NextResponse.redirect(new URL('/', request.url));
     }
