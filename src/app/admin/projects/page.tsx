@@ -92,12 +92,7 @@ export default function AdminProjectsPage() {
   };
 
 
-  const toggleFeatured = async (id: string, currentStatus: boolean) => {
-    const { error } = await supabase.from('student_projects').update({ featured: !currentStatus }).eq('id', id);
-    if (!error) {
-      setProjects(prev => prev.map(p => p.id === id ? { ...p, featured: !currentStatus } : p));
-    }
-  };
+
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, bucket: string, fieldName: keyof StudentProject, isArray: boolean = false) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -227,7 +222,7 @@ export default function AdminProjectsPage() {
               <th className="p-4 font-medium">Student</th>
               <th className="p-4 font-medium">Category</th>
               <th className="p-4 font-medium">Status</th>
-              <th className="p-4 font-medium">Featured</th>
+
               <th className="p-4 font-medium text-right">Actions</th>
             </tr>
           </thead>
@@ -248,14 +243,7 @@ export default function AdminProjectsPage() {
                       {proj.published ? <><Eye size={14} /> Published</> : <><EyeOff size={14} /> Draft</>}
                     </button>
                   </td>
-                  <td className="p-4">
-                    <button
-                      onClick={() => toggleFeatured(proj.id, proj.featured)}
-                      className={`p-1 rounded ${proj.featured ? 'text-yellow-500' : 'text-gray-400'}`}
-                    >
-                      <Star size={18} fill={proj.featured ? 'currentColor' : 'none'} />
-                    </button>
-                  </td>
+
                   <td className="p-4 text-right flex justify-end gap-2">
                     <button onClick={() => { setCurrentProject(proj); setIsModalOpen(true); }} className="p-2 text-blue-600 hover:bg-blue-50 rounded">
                       <Edit2 size={16} />
