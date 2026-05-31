@@ -279,15 +279,13 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                               ))}
                             </ul>
                           )}
-                          <a
-                            href={mod.mkdocsUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                          <Link
+                            href={`/modules/${mod.slug}/${lecture.id}`}
                             className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#185FA5] hover:underline"
                           >
                             Read full lecture
                             <ExternalLink size={9} />
-                          </a>
+                          </Link>
                         </div>
                       )}
                     </div>
