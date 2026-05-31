@@ -17,7 +17,6 @@ export function FeaturedProjects() {
         .from('student_projects')
         .select('*')
         .eq('published', true)
-        .eq('featured', true)
         .order('created_at', { ascending: false })
         .limit(6);
 
