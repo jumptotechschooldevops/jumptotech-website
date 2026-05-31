@@ -51,7 +51,7 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
         .from('modules')
         .select('*')
         .eq('slug', initialModuleSlug)
-        .eq('published', true)
+
         .single();
 
       if (modError || !modData) {
@@ -65,9 +65,9 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
       const { data: lecData } = await supabase
         .from('lectures')
         .select('*')
-        .eq('module_id', modData.id)
-        .eq('published', true)
-        .order('order_index', { ascending: true });
+        .eq('module_slug', modData.slug)
+
+        ;
 
       if (lecData) setLectures(lecData);
 
@@ -75,9 +75,9 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
       const { data: labData } = await supabase
         .from('labs')
         .select('*')
-        .eq('module_id', modData.id)
-        .eq('published', true)
-        .order('order_index', { ascending: true });
+        .eq('module_slug', modData.slug)
+
+        ;
 
       if (labData) setLabs(labData);
 
