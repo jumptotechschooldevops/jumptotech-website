@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Module, Lecture } from "@/lib/data";
 import { useProgress } from "@/hooks/useProgress";
 import { useAuth } from "@/hooks/useAuth";
-import { useAppState } from "@/contexts/AppStateContext";
 import { GiscusComments } from "@/components/GiscusComments";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { DbModule, DbLecture, DbLab } from "@/types/supabase-modules";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -22,68 +21,78 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-const difficultyColors = {
+const difficultyColors: Record<string, string> = {
   beginner: "bg-[#1D9E75]/15 text-[#1D9E75] border-[#1D9E75]/25",
   intermediate: "bg-[#185FA5]/15 text-[#185FA5] border-[#185FA5]/25",
   advanced: "bg-orange-500/15 text-orange-500 border-orange-500/25",
 };
-
-interface DbLecture {
-  id: string;
-  title: string;
-  description: string | null;
-  duration: string;
-  type: string;
-  order_index: number;
-}
 
 interface Props {
   initialModuleSlug: string;
 }
 
 export function ModulePageClient({ initialModuleSlug }: Props) {
-  const { modulesData } = useAppState();
-
-  const foundMod = modulesData.find(m => m.slug === initialModuleSlug);
-  const mod = foundMod || null;
+  const [mod, setMod] = useState<DbModule | null>(null);
+  const [lectures, setLectures] = useState<DbLecture[]>([]);
+  const [labs, setLabs] = useState<DbLab[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const { mounted, completedLectures, completedLabs, toggleLecture, toggleLab } = useProgress(mod ? mod.id : "");
   const { role } = useAuth();
 
-  const [dbLectures, setDbLectures] = useState<Lecture[]>([]);
   const [expandedLectures, setExpandedLectures] = useState<Set<string>>(new Set());
   const [sidebarLecturesOpen, setSidebarLecturesOpen] = useState(true);
   const [sidebarLabsOpen, setSidebarLabsOpen] = useState(false);
 
   useEffect(() => {
-    if (mod) {
-      supabase
-        .from("lectures")
-        .select("id, title, description, duration, type, order_index")
-        .eq("module_slug", mod.slug)
-        .order("order_index", { ascending: true })
-        .then(({ data }) => {
-          if (data && data.length > 0) {
-            setDbLectures(
-              (data as DbLecture[]).map((l) => ({
-                id: l.id,
-                title: l.title,
-                description: l.description ?? "",
-                duration: l.duration,
-                type: (["lab", "video"].includes(l.type) ? l.type : "reading") as "reading" | "lab" | "video",
-              }))
-            );
-          }
-        });
-    }
-  }, [mod?.slug]);
+    const fetchModuleData = async () => {
+      // Fetch module
+      const { data: modData, error: modError } = await supabase
+        .from('modules')
+        .select('*')
+        .eq('slug', initialModuleSlug)
+        .eq('published', true)
+        .single();
 
-  if (!mod) return null;
+      if (modError || !modData) {
+        setLoading(false);
+        return;
+      }
 
-  const dbLectureIds = new Set(dbLectures.map((l) => l.id));
-  const displayLectures = [...dbLectures, ...mod.lectures];
-  const displayLectureCount = displayLectures.length;
-  const totalItems = displayLectureCount + mod.labCount;
+      setMod(modData);
+
+      // Fetch lectures
+      const { data: lecData } = await supabase
+        .from('lectures')
+        .select('*')
+        .eq('module_id', modData.id)
+        .eq('published', true)
+        .order('order_index', { ascending: true });
+
+      if (lecData) setLectures(lecData);
+
+      // Fetch labs
+      const { data: labData } = await supabase
+        .from('labs')
+        .select('*')
+        .eq('module_id', modData.id)
+        .eq('published', true)
+        .order('order_index', { ascending: true });
+
+      if (labData) setLabs(labData);
+
+      setLoading(false);
+    };
+
+    fetchModuleData();
+  }, [initialModuleSlug]);
+
+  if (loading) return <div className="p-12 text-center text-[var(--muted)]">Loading module...</div>;
+  if (!mod) return <div className="p-12 text-center text-[var(--muted)]">Module not found.</div>;
+
+  const displayLectureCount = lectures.length;
+  const labCount = labs.length;
+  const totalItems = displayLectureCount + labCount;
   const completedCount = completedLectures.length + completedLabs.length;
   const progressPct = totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
   const isComplete = progressPct === 100;
@@ -101,15 +110,17 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
     <div className="bg-[var(--background)]">
       {/* Hero cover */}
       <div className="relative h-64 sm:h-80 overflow-hidden">
-        <img
-          src={mod.coverImage}
-          alt={mod.title}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        {mod.cover_image && (
+          <img
+            src={mod.cover_image}
+            alt={mod.title}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+        )}
         <div
           className="absolute inset-0"
           style={{
-            background: `linear-gradient(to bottom, ${mod.color}99 0%, ${mod.color}ee 60%, ${mod.color} 100%)`,
+            background: `linear-gradient(to bottom, ${mod.color || '#000'}99 0%, ${mod.color || '#000'}ee 60%, ${mod.color || '#000'} 100%)`,
           }}
         />
         <div className="absolute inset-0 flex flex-col justify-end">
@@ -138,11 +149,11 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
               </span>
               <span className="flex items-center gap-1.5">
                 <FlaskConical size={15} className="text-[#1D9E75]" />
-                {mod.labCount} labs
+                {labCount} labs
               </span>
               <span className="flex items-center gap-1.5">
                 <Clock size={15} className="text-purple-500" />
-                {mod.totalHours}h total
+                {mod.total_hours}h total
               </span>
             </div>
 
@@ -206,7 +217,7 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
               </div>
 
               <div className="space-y-2">
-                {displayLectures.map((lecture, idx) => {
+                {lectures.map((lecture, idx) => {
                   const isCompleted = mounted && completedLectures.includes(lecture.id);
                   const isExpanded = expandedLectures.has(lecture.id);
                   return (
@@ -248,11 +259,6 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                               {lecture.title}
                             </p>
                             <div className="flex items-center gap-2 shrink-0">
-                              {dbLectureIds.has(lecture.id) && (
-                                <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[#1D9E75]/15 text-[#1D9E75] border border-[#1D9E75]/30">
-                                  New
-                                </span>
-                              )}
                               {role === "visitor" ? (
                                 <span className="text-xs text-[var(--muted)] font-medium">Locked</span>
                               ) : (
@@ -269,16 +275,6 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
 
                       {isExpanded && (
                         <div className="px-4 pb-4 ml-8">
-                          {lecture.subtopics && lecture.subtopics.length > 0 && (
-                            <ul className="space-y-1.5 mb-3">
-                              {lecture.subtopics.map((topic) => (
-                                <li key={topic} className="flex items-center gap-2 text-xs text-[var(--muted)]">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-[#185FA5]/50 shrink-0" />
-                                  {topic}
-                                </li>
-                              ))}
-                            </ul>
-                          )}
                           <Link
                             href={`/modules/${mod.slug}/${lecture.id}`}
                             className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#185FA5] hover:underline"
@@ -300,12 +296,12 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                 <FlaskConical size={20} className="text-[#1D9E75]" />
                 <h2 className="text-xl font-bold text-[var(--foreground)]">Hands-on Labs</h2>
                 <span className="px-2 py-0.5 rounded-md bg-[var(--muted-bg)] text-xs font-medium text-[var(--muted)]">
-                  {mod.labCount}
+                  {labCount}
                 </span>
               </div>
 
               <div className="space-y-3">
-                {mod.labs.map((lab, idx) => {
+                {labs.map((lab, idx) => {
                   const isCompleted = mounted && completedLabs.includes(lab.id);
                   return (
                     <div
@@ -336,11 +332,13 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                             {role === "visitor" && (
                               <span className="text-xs text-[var(--muted)] font-medium">Locked</span>
                             )}
-                            <span
-                              className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border shrink-0 ${difficultyColors[lab.difficulty]}`}
-                            >
-                              {lab.difficulty}
-                            </span>
+                            {lab.difficulty && (
+                              <span
+                                className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border shrink-0 ${difficultyColors[lab.difficulty] || difficultyColors.beginner}`}
+                              >
+                                {lab.difficulty}
+                              </span>
+                            )}
                           </div>
                         </div>
                         <p className="text-xs text-[var(--muted)] leading-relaxed">{lab.description}</p>
@@ -384,15 +382,15 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                   <div className="flex justify-between text-xs mb-1.5">
                     <span className="text-[var(--muted)]">Labs</span>
                     <span className="font-semibold text-[#1D9E75]">
-                      {mounted ? completedLabs.length : 0}/{mod.labCount}
+                      {mounted ? completedLabs.length : 0}/{labCount}
                     </span>
                   </div>
                   <div className="h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
                     <div
                       className="h-full bg-[#1D9E75] rounded-full transition-all duration-500"
                       style={{
-                        width: mounted && mod.labCount > 0
-                          ? `${Math.round((completedLabs.length / mod.labCount) * 100)}%`
+                        width: mounted && labCount > 0
+                          ? `${Math.round((completedLabs.length / labCount) * 100)}%`
                           : "0%",
                       }}
                     />
@@ -444,7 +442,7 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                 </button>
                 {sidebarLecturesOpen && (
                   <div className="mt-1 space-y-0.5 pl-1">
-                    {displayLectures.map((lecture, idx) => (
+                    {lectures.map((lecture, idx) => (
                       <div key={lecture.id} className="flex items-start gap-1.5 py-0.5">
                         <span className="text-[10px] text-[var(--muted)] w-5 text-right shrink-0 pt-px">{idx + 1}.</span>
                         <span className="text-xs text-[var(--muted)] leading-tight">{lecture.title}</span>
@@ -465,7 +463,7 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                   <span className="flex items-center gap-2">
                     <FlaskConical size={13} className="text-[#1D9E75]" />
                     Labs
-                    <span className="text-xs text-[var(--muted)] font-normal">({mod.labCount})</span>
+                    <span className="text-xs text-[var(--muted)] font-normal">({labCount})</span>
                   </span>
                   <ChevronDown
                     size={13}
@@ -474,7 +472,7 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                 </button>
                 {sidebarLabsOpen && (
                   <div className="mt-1 space-y-0.5 pl-1">
-                    {mod.labs.map((lab, idx) => (
+                    {labs.map((lab, idx) => (
                       <div key={lab.id} className="flex items-start gap-1.5 py-0.5">
                         <span className="text-[10px] text-[var(--muted)] w-5 text-right shrink-0 pt-px">{idx + 1}.</span>
                         <span className="text-xs text-[var(--muted)] leading-tight">{lab.title}</span>
@@ -491,8 +489,8 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
               <div className="space-y-3">
                 {[
                   { icon: PlayCircle, label: "Lectures", value: displayLectureCount, color: "#185FA5" },
-                  { icon: FlaskConical, label: "Labs", value: mod.labCount, color: "#1D9E75" },
-                  { icon: Clock, label: "Total time", value: `${mod.totalHours} hours`, color: "#7c3aed" },
+                  { icon: FlaskConical, label: "Labs", value: labCount, color: "#1D9E75" },
+                  { icon: Clock, label: "Total time", value: `${mod.total_hours} hours`, color: "#7c3aed" },
                 ].map(({ icon: Icon, label, value, color }) => (
                   <div key={label} className="flex items-center justify-between">
                     <span className="flex items-center gap-2 text-sm text-[var(--muted)]">
@@ -505,30 +503,6 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
               </div>
             </div>
 
-            {/* Navigation */}
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--card-bg)] p-5">
-              <h3 className="font-bold text-[var(--foreground)] mb-3">Other Modules</h3>
-              <div className="space-y-1.5">
-                {[
-                  { slug: "git", title: "Git & Version Control" },
-                  { slug: "linux", title: "Linux Fundamentals" },
-                  { slug: "docker", title: "Docker & Containers" },
-                  { slug: "kubernetes", title: "Kubernetes" },
-                  { slug: "terraform", title: "Terraform & IaC" },
-                ].filter((m) => m.slug !== mod.slug).map((m) => (
-                  <Link
-                    key={m.slug}
-                    href={`/modules/${m.slug}`}
-                    className="flex items-center justify-between p-2 rounded-lg hover:bg-[var(--muted-bg)] transition-colors group"
-                  >
-                    <span className="text-sm text-[var(--muted)] group-hover:text-[var(--foreground)] transition-colors">
-                      {m.title}
-                    </span>
-                    <ChevronRight size={13} className="text-[var(--muted)] group-hover:text-[#185FA5] transition-colors" />
-                  </Link>
-                ))}
-              </div>
-            </div>
           </div>
         </div>
       </div>

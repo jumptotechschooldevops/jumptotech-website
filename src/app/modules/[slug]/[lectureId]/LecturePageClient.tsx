@@ -5,11 +5,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Module, Lecture } from "@/lib/data";
 import { useProgress } from "@/hooks/useProgress";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/lib/supabase";
-import { useAppState } from "@/contexts/AppStateContext";
+import { DbModule, DbLecture } from "@/types/supabase-modules";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -22,9 +21,8 @@ import {
 } from "lucide-react";
 
 interface Props {
-  module: Module;
+  slug: string;
   lectureId: string;
-  initialContent: string | null;
 }
 
 const mdComponents = {
@@ -52,354 +50,215 @@ const mdComponents = {
   tr: ({ children }: { children?: React.ReactNode }) => <tr className="md-tr">{children}</tr>,
 };
 
-export function LecturePageClient({ module: mod, lectureId, initialContent }: Props) {
+export function LecturePageClient({ slug, lectureId }: Props) {
   const router = useRouter();
-  const { mounted, completedLectures, completedLabs, toggleLecture } = useProgress(mod.id);
   const { loggedIn, mounted: authMounted } = useAuth();
-  const { markLectureComplete } = useAppState();
 
-  const [dbLectures, setDbLectures] = useState<Lecture[]>([]);
-  const [dbContent, setDbContent] = useState<string | null>(null);
-
-  useEffect(() => {
-    supabase
-      .from("lectures")
-      .select("id, title, description, type, order_index, content")
-      .eq("module_slug", mod.slug)
-      .order("order_index", { ascending: true })
-      .then(({ data }) => {
-        if (data && data.length > 0) {
-          setDbLectures(
-            data.map((l: { id: string; title: string; description: string | null; type: string; order_index: number; content?: string }) => ({
-              id: l.id,
-              title: l.title,
-              description: l.description ?? "",
-              type: (["lab", "video"].includes(l.type) ? l.type : "reading") as "reading" | "lab" | "video",
-              content: l.content,
-            }))
-          );
-          const match = data.find((l: { id: string; content?: string }) => l.id === lectureId);
-
-          if (match && typeof match === "object") {
-            setDbContent(match.content || "");
-          }
-        }
-      });
-  }, [mod.slug, lectureId]);
+  const [mod, setMod] = useState<DbModule | null>(null);
+  const [lectures, setLectures] = useState<DbLecture[]>([]);
+  const [labsCount, setLabsCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (authMounted && !loggedIn) router.replace("/login");
   }, [authMounted, loggedIn, router]);
 
-  // Merge db lectures + static lectures (db first, no duplicates)
-  const dbIds = new Set(dbLectures.map((l) => l.id));
-  const allLectures = [...dbLectures, ...mod.lectures.filter((l) => !dbIds.has(l.id))];
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: modData } = await supabase.from('modules').select('*').eq('slug', slug).single();
+      if (!modData) {
+        setLoading(false);
+        return;
+      }
+      setMod(modData);
 
-  // Find the current lecture
-  const lecture = allLectures.find((l) => l.id === lectureId) ?? mod.lectures.find((l) => l.id === lectureId);
-  const currentIdx = allLectures.findIndex((l) => l.id === lectureId);
-  const prevLecture = currentIdx > 0 ? allLectures[currentIdx - 1] : null;
-  const nextLecture = currentIdx >= 0 && currentIdx < allLectures.length - 1 ? allLectures[currentIdx + 1] : null;
+      const { data: lecData } = await supabase.from('lectures').select('*').eq('module_id', modData.id).eq('published', true).order('order_index', { ascending: true });
+      if (lecData) setLectures(lecData);
+
+      const { count } = await supabase.from('labs').select('*', { count: 'exact', head: true }).eq('module_id', modData.id).eq('published', true);
+      setLabsCount(count || 0);
+
+      setLoading(false);
+    };
+    fetchData();
+  }, [slug]);
+
+  const { mounted, completedLectures, completedLabs, toggleLecture } = useProgress(mod ? mod.id : "");
+
+  if (!authMounted || !loggedIn) return null;
+  if (loading) return <div className="p-12 text-center text-[var(--muted)]">Loading lecture...</div>;
+  if (!mod || lectures.length === 0) return <div className="p-12 text-center text-[var(--muted)]">Lecture not found.</div>;
+
+  const currentIdx = lectures.findIndex((l) => l.id === lectureId);
+  const lecture = lectures[currentIdx];
+
+  if (!lecture) return <div className="p-12 text-center text-[var(--muted)]">Lecture not found.</div>;
+
+  const prevLecture = currentIdx > 0 ? lectures[currentIdx - 1] : null;
+  const nextLecture = currentIdx >= 0 && currentIdx < lectures.length - 1 ? lectures[currentIdx + 1] : null;
 
   const isCompleted = mounted && completedLectures.includes(lectureId);
-  const totalItems = allLectures.length + mod.labCount;
+  const totalItems = lectures.length + labsCount;
   const completedCount = completedLectures.length + completedLabs.length;
   const progressPct = totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
 
-  // Content priority: Supabase live > Supabase fetched > static data.ts
-  const content = dbContent ?? initialContent ?? lecture?.content ?? lecture?.description ?? "";
-
-  const handleMarkComplete = () => {
-    if (!mounted) return;
-    toggleLecture(lectureId);
-    if (!isCompleted && nextLecture) {
-      setTimeout(() => router.push(`/modules/${mod.slug}/${nextLecture.id}`), 300);
-    }
-  };
+  const content = lecture.content ?? lecture.description ?? "";
 
   return (
-    <div className="min-h-screen bg-[var(--background)]">
-      {/* Top bar */}
-      <div className="bg-[var(--card-bg)] border-b border-[var(--border)] sticky top-0 z-40">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
+    <div className="bg-[var(--background)] min-h-screen">
+      {/* Top nav */}
+      <div className="bg-[var(--card-bg)] border-b border-[var(--border)] sticky top-0 z-30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
           <Link
             href={`/modules/${mod.slug}`}
-            className="flex items-center gap-1.5 text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
+            className="flex items-center gap-2 text-sm text-[var(--muted)] hover:text-[var(--foreground)] transition-colors"
           >
-            <ArrowLeft size={15} />
-            <span className="hidden sm:inline">{mod.title}</span>
+            <ArrowLeft size={16} />
+            <span className="hidden sm:inline">Back to {mod.title}</span>
             <span className="sm:hidden">Back</span>
           </Link>
 
-          <div className="flex-1 min-w-0 text-center">
-            <p className="text-xs font-semibold text-[var(--muted)] truncate">{mod.title}</p>
-          </div>
-
-          {/* Progress pill */}
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="h-1.5 w-24 bg-[var(--border)] rounded-full overflow-hidden hidden sm:block">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{ width: mounted ? `${progressPct}%` : "0%", backgroundColor: progressPct === 100 ? "#1D9E75" : "#185FA5" }}
-              />
+          <div className="flex items-center gap-4">
+            <div className="hidden sm:flex items-center gap-3">
+              <div className="text-right">
+                <div className="text-xs font-semibold text-[var(--foreground)]">{progressPct}% Complete</div>
+                <div className="text-[10px] text-[var(--muted)]">{completedCount}/{totalItems} items</div>
+              </div>
+              <div className="w-24 h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#185FA5] rounded-full transition-all duration-500"
+                  style={{ width: mounted ? `${progressPct}%` : "0%" }}
+                />
+              </div>
             </div>
-            <span className="text-xs font-bold text-[var(--muted)]">{mounted ? progressPct : 0}%</span>
+
+            <button
+              onClick={() => mounted && toggleLecture(lecture.id)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                isCompleted
+                  ? "bg-[#1D9E75]/10 text-[#1D9E75] hover:bg-[#1D9E75]/20 border border-[#1D9E75]/20"
+                  : "bg-[#185FA5] text-white hover:bg-[#185FA5]/90 border border-transparent"
+              }`}
+            >
+              {isCompleted ? (
+                <>
+                  <CheckCircle2 size={16} />
+                  <span>Completed</span>
+                </>
+              ) : (
+                <>
+                  <Circle size={16} />
+                  <span>Mark Complete</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-screen-2xl mx-auto flex">
-        {/* LEFT SIDEBAR — lecture list */}
-        <aside className="hidden lg:flex flex-col w-72 xl:w-80 shrink-0 border-r border-[var(--border)] min-h-[calc(100vh-53px)] sticky top-[53px] h-[calc(100vh-53px)] overflow-y-auto">
-          <div className="p-4">
-            <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mb-3 px-1">
-              Lectures
-            </p>
-            <div className="space-y-0.5">
-              {allLectures.map((lec, idx) => {
-                const isCurrent = lec.id === lectureId;
-                const isDone = mounted && completedLectures.includes(lec.id);
-                return (
-                  <Link
-                    key={lec.id}
-                    href={`/modules/${mod.slug}/${lec.id}`}
-                    className={`flex items-start gap-2.5 p-2.5 rounded-lg transition-all group ${
-                      isCurrent
-                        ? "bg-[#185FA5]/15 border border-[#185FA5]/30"
-                        : "hover:bg-[var(--muted-bg)] border border-transparent"
-                    }`}
-                  >
-                    <div className="shrink-0 mt-0.5">
-                      {isDone ? (
-                        <CheckCircle2 size={16} className="text-[#1D9E75]" />
-                      ) : (
-                        <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${isCurrent ? "border-[#185FA5]" : "border-[var(--border)]"}`}>
-                          <span className="text-[9px] font-bold text-[var(--muted)]">{idx + 1}</span>
-                        </div>
-                      )}
-                    </div>
-                    <span className={`text-xs leading-snug ${isCurrent ? "text-[#185FA5] font-semibold" : isDone ? "text-[var(--muted)] line-through" : "text-[var(--foreground)]"}`}>
-                      {lec.title}
-                    </span>
-                  </Link>
-                );
-              })}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+
+          {/* Main content */}
+          <div className="lg:col-span-3">
+            <div className="mb-8">
+              <div className="flex items-center gap-2 text-sm text-[var(--muted)] mb-3">
+                <span className="px-2 py-0.5 rounded bg-[var(--muted-bg)] font-medium">Lecture {currentIdx + 1}</span>
+                <span>•</span>
+                <span>{lecture.duration}</span>
+                <span>•</span>
+                <span className="capitalize">{lecture.type}</span>
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-extrabold text-[var(--foreground)] mb-4 leading-tight">
+                {lecture.title}
+              </h1>
             </div>
 
-            {mod.labs.length > 0 && (
-              <>
-                <p className="text-xs font-bold uppercase tracking-wider text-[var(--muted)] mt-5 mb-3 px-1 flex items-center gap-1.5">
-                  <FlaskConical size={11} className="text-[#1D9E75]" />
-                  Labs
-                </p>
-                <div className="space-y-0.5">
-                  {mod.labs.map((lab, idx) => {
-                    const isDone = mounted && completedLabs.includes(lab.id);
-                    return (
-                      <div
-                        key={lab.id}
-                        className="flex items-start gap-2.5 p-2.5 rounded-lg border border-transparent"
-                      >
-                        <div className="shrink-0 mt-0.5">
-                          {isDone ? (
-                            <CheckCircle2 size={16} className="text-[#1D9E75]" />
-                          ) : (
-                            <Circle size={16} className="text-[var(--border)]" />
-                          )}
-                        </div>
-                        <span className={`text-xs leading-snug ${isDone ? "text-[var(--muted)] line-through" : "text-[var(--muted)]"}`}>
-                          Lab {idx + 1} — {lab.title.replace(/^Lab \d+ — /, '')}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
-        </aside>
+            <div className="prose prose-invert max-w-none mb-12">
+              <Markdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+                {content}
+              </Markdown>
+            </div>
 
-        {/* MAIN CONTENT */}
-        <main className="flex-1 min-w-0 px-4 sm:px-8 lg:px-12 py-8 max-w-3xl mx-auto lg:mx-0">
-          {lecture ? (
-            <>
-              {/* Lecture header */}
-              <div className="mb-8">
-                <div className="flex items-center gap-2 mb-2">
-                  <PlayCircle size={14} className="text-[#185FA5]" />
-                  <span className="text-xs text-[var(--muted)] font-medium">
-                    {currentIdx >= 0 ? `Lecture ${currentIdx + 1} of ${allLectures.length}` : "Lecture"}
-                  </span>
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold text-[var(--foreground)] leading-snug">
-                  {lecture.title}
-                </h1>
-                <p className="text-[var(--muted)] mt-2 text-sm">{lecture.description}</p>
-              </div>
-
-              {/* Lecture body */}
-              <article className="md-content mb-12">
-                {!content || content === 'Full content coming soon. Check back after Batch 4 starts June 1.' ? (
-                  <div className="flex flex-col items-center justify-center py-16 text-center">
-                    <div className="w-16 h-16 rounded-2xl bg-[#185FA5]/10 flex items-center justify-center mb-4">
-                      <PlayCircle size={28} className="text-[#185FA5]" />
-                    </div>
-                    <h3 className="text-lg font-bold text-[var(--foreground)] mb-2">Content Coming Soon</h3>
-                    <p className="text-[var(--muted)] text-sm max-w-xs">
-                      Full content coming soon. Check back after Batch 4 starts June 1.
-                    </p>
-                  </div>
-                ) : (
-                  <Markdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-                    {content}
-                  </Markdown>
-                )}
-              </article>
-
-              {/* Navigation footer */}
-              <div className="border-t border-[var(--border)] pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="flex gap-3">
-                  {prevLecture ? (
-                    <Link
-                      href={`/modules/${mod.slug}/${prevLecture.id}`}
-                      className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[var(--border)] bg-[var(--card-bg)] hover:border-[#185FA5]/50 hover:bg-[#185FA5]/5 text-sm font-medium text-[var(--foreground)] transition-all"
-                    >
-                      <ChevronLeft size={16} />
-                      Previous
-                    </Link>
-                  ) : (
-                    <div />
-                  )}
-                </div>
-
-                <button
-                  onClick={handleMarkComplete}
-                  disabled={!mounted}
-                  className={`flex items-center gap-2 px-5 py-2.5 rounded-lg font-semibold text-sm transition-all ${
-                    isCompleted
-                      ? "bg-[#1D9E75]/15 text-[#1D9E75] border border-[#1D9E75]/30 hover:bg-[#1D9E75]/25"
-                      : "bg-[#185FA5] text-white hover:bg-[#185FA5]/90"
-                  }`}
+            {/* Bottom navigation */}
+            <div className="flex items-center justify-between pt-8 border-t border-[var(--border)]">
+              {prevLecture ? (
+                <Link
+                  href={`/modules/${mod.slug}/${prevLecture.id}`}
+                  className="flex items-center gap-2 text-[var(--muted)] hover:text-[var(--foreground)] transition-colors group"
                 >
-                  {isCompleted ? (
-                    <>
-                      <CheckCircle2 size={16} />
-                      Completed
-                    </>
-                  ) : (
-                    <>
-                      <Circle size={16} />
-                      Mark as Complete
-                    </>
-                  )}
-                </button>
+                  <ChevronLeft size={20} className="group-hover:-translate-x-1 transition-transform" />
+                  <div className="hidden sm:block">
+                    <div className="text-xs font-semibold mb-0.5 text-right">Previous</div>
+                    <div className="text-sm truncate max-w-[200px]">{prevLecture.title}</div>
+                  </div>
+                  <div className="sm:hidden text-sm font-medium">Prev</div>
+                </Link>
+              ) : <div />}
 
-                {nextLecture ? (
-                  <Link
-                    href={`/modules/${mod.slug}/${nextLecture.id}`}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-[#185FA5] text-white hover:bg-[#185FA5]/90 text-sm font-medium transition-all"
-                  >
-                    Next Lecture
-                    <ChevronRight size={16} />
-                  </Link>
-                ) : (
-                  <Link
-                    href={`/modules/${mod.slug}`}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[#1D9E75]/30 bg-[#1D9E75]/10 text-[#1D9E75] hover:bg-[#1D9E75]/20 text-sm font-medium transition-all"
-                  >
-                    <Award size={16} />
-                    Finish Module
-                  </Link>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-20">
-              <p className="text-[var(--muted)]">Lecture not found.</p>
-              <Link href={`/modules/${mod.slug}`} className="text-[#185FA5] hover:underline text-sm mt-2 inline-block">
-                Back to module
-              </Link>
+              {nextLecture ? (
+                <Link
+                  href={`/modules/${mod.slug}/${nextLecture.id}`}
+                  className="flex items-center gap-2 text-[#185FA5] hover:text-[#185FA5]/80 transition-colors group text-right"
+                >
+                  <div className="hidden sm:block">
+                    <div className="text-xs font-semibold mb-0.5">Next</div>
+                    <div className="text-sm truncate max-w-[200px]">{nextLecture.title}</div>
+                  </div>
+                  <div className="sm:hidden text-sm font-medium">Next</div>
+                  <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
+                </Link>
+              ) : (
+                <Link
+                  href={`/modules/${mod.slug}`}
+                  className="flex items-center gap-2 text-[#1D9E75] hover:text-[#1D9E75]/80 transition-colors font-medium"
+                >
+                  <Award size={18} />
+                  Finish Module
+                </Link>
+              )}
             </div>
-          )}
-        </main>
-
-        {/* RIGHT SIDEBAR — progress */}
-        <aside className="hidden xl:flex flex-col w-64 shrink-0 border-l border-[var(--border)] min-h-[calc(100vh-53px)] sticky top-[53px] h-[calc(100vh-53px)] overflow-y-auto">
-          <div className="p-5">
-            <h3 className="font-bold text-[var(--foreground)] mb-4 text-sm">Module Progress</h3>
-
-            {/* Big ring */}
-            <div className="flex flex-col items-center mb-5">
-              <div className="relative w-20 h-20">
-                <svg viewBox="0 0 36 36" className="w-20 h-20 -rotate-90">
-                  <circle cx="18" cy="18" r="14" fill="none" stroke="var(--border)" strokeWidth="3" />
-                  <circle
-                    cx="18" cy="18" r="14" fill="none"
-                    stroke={progressPct === 100 ? "#1D9E75" : "#185FA5"}
-                    strokeWidth="3"
-                    strokeDasharray={`${progressPct * 87.96 / 100} ${87.96}`}
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center text-base font-extrabold text-[var(--foreground)]">
-                  {mounted ? progressPct : 0}%
-                </span>
-              </div>
-              <p className="text-xs text-[var(--muted)] mt-2">
-                {mounted ? completedCount : 0} / {totalItems} completed
-              </p>
-            </div>
-
-            {/* Progress bars */}
-            <div className="space-y-3 mb-4">
-              <div>
-                <div className="flex justify-between text-xs mb-1.5">
-                  <span className="text-[var(--muted)] flex items-center gap-1">
-                    <PlayCircle size={11} className="text-[#185FA5]" />
-                    Lectures
-                  </span>
-                  <span className="font-semibold text-[#185FA5]">
-                    {mounted ? completedLectures.length : 0}/{allLectures.length}
-                  </span>
-                </div>
-                <div className="h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#185FA5] rounded-full transition-all duration-500"
-                    style={{ width: mounted && allLectures.length > 0 ? `${Math.round((completedLectures.length / allLectures.length) * 100)}%` : "0%" }}
-                  />
-                </div>
-              </div>
-              <div>
-                <div className="flex justify-between text-xs mb-1.5">
-                  <span className="text-[var(--muted)] flex items-center gap-1">
-                    <FlaskConical size={11} className="text-[#1D9E75]" />
-                    Labs
-                  </span>
-                  <span className="font-semibold text-[#1D9E75]">
-                    {mounted ? completedLabs.length : 0}/{mod.labCount}
-                  </span>
-                </div>
-                <div className="h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#1D9E75] rounded-full transition-all duration-500"
-                    style={{ width: mounted && mod.labCount > 0 ? `${Math.round((completedLabs.length / mod.labCount) * 100)}%` : "0%" }}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {progressPct === 100 && (
-              <div className="flex items-center gap-2 p-3 rounded-xl bg-[#1D9E75]/10 border border-[#1D9E75]/25 text-[#1D9E75] text-xs font-semibold">
-                <Award size={14} />
-                Module Complete!
-              </div>
-            )}
-
-            <p className="text-[10px] text-[var(--muted)] mt-3 text-center">
-              Progress is saved in your browser.
-            </p>
           </div>
-        </aside>
+
+          {/* Sidebar */}
+          <div className="hidden lg:block lg:col-span-1">
+            <div className="sticky top-20 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] p-4">
+              <h3 className="font-bold text-[var(--foreground)] mb-4 px-2">Lectures</h3>
+              <div className="space-y-1">
+                {lectures.map((l, idx) => {
+                  const isCurrent = l.id === lectureId;
+                  const isDone = mounted && completedLectures.includes(l.id);
+
+                  return (
+                    <Link
+                      key={l.id}
+                      href={`/modules/${mod.slug}/${l.id}`}
+                      className={`flex items-start gap-2.5 p-2 rounded-lg transition-colors text-sm ${
+                        isCurrent
+                          ? "bg-[#185FA5]/10 text-[#185FA5] font-semibold"
+                          : "hover:bg-[var(--muted-bg)] text-[var(--muted)]"
+                      }`}
+                    >
+                      <div className="mt-0.5 shrink-0">
+                        {isDone ? (
+                          <CheckCircle2 size={16} className="text-[#1D9E75]" />
+                        ) : (
+                          <span className={`w-4 h-4 rounded-full border flex items-center justify-center text-[9px] ${
+                            isCurrent ? "border-[#185FA5] text-[#185FA5]" : "border-[var(--muted)] text-[var(--muted)]"
+                          }`}>
+                            {idx + 1}
+                          </span>
+                        )}
+                      </div>
+                      <span className="leading-snug">{l.title}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );
