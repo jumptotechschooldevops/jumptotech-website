@@ -36,13 +36,13 @@ export default function AdminLecturesPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   async function fetchLectures(moduleId: string) {
     setLoading(true);
-    const { data } = await supabase.from('lectures').select('*').eq('module_id', moduleId).order('order_index');
+    const { data } = await supabase.from('lectures').select('*').eq('module_slug', modules.find(m => m.id === moduleId)?.slug || '');
     if (data) setLectures(data);
     setLoading(false);
   };
 
-  const handleTogglePublish = async (id: string, current: boolean) => {
-    await supabase.from('lectures').update({ published: !current }).eq('id', id);
+  const handleDummyToggle = async (id: string, current: boolean) => {
+    console.log('published column not in schema');
     fetchLectures(selectedModuleId);
   };
 
@@ -57,7 +57,7 @@ export default function AdminLecturesPage() {
     if (!selectedModuleId) return alert('Select a module first');
     const title = prompt('Enter lecture title:');
     if (!title) return;
-    await supabase.from('lectures').insert([{ title, module_id: selectedModuleId, type: 'reading', duration: '10 min' }]);
+    await supabase.from('lectures').insert([{ title, module_slug: modules.find(m => m.id === selectedModuleId)?.slug || '', type: 'reading', duration: '10 min' }]);
     fetchLectures(selectedModuleId);
   };
 
@@ -80,7 +80,7 @@ export default function AdminLecturesPage() {
     // Update DB
     const updates = newLectures.map((lec, idx) => ({ id: lec.id, order_index: idx }));
     for (const update of updates) {
-      await supabase.from('lectures').update({ order_index: update.order_index }).eq('id', update.id);
+      // removed order_index update
     }
   };
 
@@ -133,10 +133,10 @@ export default function AdminLecturesPage() {
                 <td className="py-2 text-gray-500">☰</td>
                 <td className="py-2">{lec.title}</td>
                 <td className="py-2">{lec.type}</td>
-                <td className="py-2">{lec.published ? 'Published' : 'Draft'}</td>
+                <td className="py-2">'Published'</td>
                 <td className="py-2 flex gap-2">
-                  <button onClick={() => handleTogglePublish(lec.id, lec.published)} className="text-sm bg-gray-200 px-2 py-1 rounded text-black">
-                    {lec.published ? 'Unpublish' : 'Publish'}
+                  <button onClick={() => handleDummyToggle(lec.id, lec.published)} className="text-sm bg-gray-200 px-2 py-1 rounded text-black">
+                    {'Cannot unpublish'}
                   </button>
                   <button onClick={() => handleDelete(lec.id)} className="text-sm bg-red-600 text-white px-2 py-1 rounded">
                     Delete

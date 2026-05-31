@@ -34,8 +34,8 @@ export default function ModulesPage() {
       if (!error && data) {
         // Fetch lecture and lab counts
         const mods = await Promise.all(data.map(async (m) => {
-          const { count: lectureCount } = await supabase.from('lectures').select('*', { count: 'exact', head: true }).eq('module_id', m.id).eq('published', true);
-          const { count: labCount } = await supabase.from('labs').select('*', { count: 'exact', head: true }).eq('module_id', m.id).eq('published', true);
+          const { count: lectureCount } = await supabase.from('lectures').select('*', { count: 'exact', head: true }).eq('module_slug', m.slug);
+          const { count: labCount } = await supabase.from('labs').select('*', { count: 'exact', head: true }).eq('module_slug', m.slug);
           return {
             ...m,
             lectureCount: lectureCount || 0,
