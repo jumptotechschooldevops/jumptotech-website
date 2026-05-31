@@ -69,6 +69,24 @@ export default function ProjectDetailsPage() {
 
   if (!project) return null;
 
+  const safeTechnologies = Array.isArray(project.technologies)
+    ? project.technologies
+    : typeof project.technologies === 'string'
+    ? (project.technologies as string).split(',').map(t => t.trim()).filter(Boolean)
+    : [];
+
+  const safeScreenshotUrls = Array.isArray(project.screenshot_urls)
+    ? project.screenshot_urls
+    : typeof project.screenshot_urls === 'string'
+    ? (project.screenshot_urls as string).split(',').map(t => t.trim()).filter(Boolean)
+    : [];
+
+  const safeVideoUrls = Array.isArray(project.video_urls)
+    ? project.video_urls
+    : typeof project.video_urls === 'string'
+    ? (project.video_urls as string).split(',').map(t => t.trim()).filter(Boolean)
+    : [];
+
   return (
     <div className="min-h-screen bg-[var(--background)] flex flex-col">
       <Navbar />
@@ -99,9 +117,9 @@ export default function ProjectDetailsPage() {
                 className="w-full h-full"
                 allowFullScreen
               />
-            ) : project.video_urls && project.video_urls.length > 0 ? (
+            ) : safeVideoUrls.length > 0 ? (
               <video
-                src={project.video_urls[0]}
+                src={safeVideoUrls[0]}
                 controls
                 className="w-full h-full object-contain bg-black"
               />
@@ -126,11 +144,11 @@ export default function ProjectDetailsPage() {
                 </div>
               </section>
 
-              {project.screenshot_urls && project.screenshot_urls.length > 0 && (
+              {safeScreenshotUrls.length > 0 && (
                 <section>
                   <h2 className="text-2xl font-bold mb-4">Screenshots</h2>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {project.screenshot_urls.map((url, i) => (
+                    {safeScreenshotUrls.map((url, i) => (
                       <div key={i} className="relative aspect-video rounded-lg overflow-hidden border border-[var(--border)] cursor-pointer hover:opacity-90 transition">
                         <Image src={url} alt={`Screenshot ${i+1}`} fill className="object-cover" />
                       </div>
@@ -166,7 +184,7 @@ export default function ProjectDetailsPage() {
               <div className="bg-[var(--card-bg)] border border-[var(--border)] p-6 rounded-2xl">
                 <h3 className="font-bold mb-4">Technologies Used</h3>
                 <div className="flex flex-wrap gap-2">
-                  {(project.technologies || []).map(tech => (
+                  {safeTechnologies.map(tech => (
                     <span key={tech} className="px-3 py-1.5 rounded-lg text-sm font-medium bg-[#185FA5]/10 text-[#185FA5]">
                       {tech}
                     </span>
