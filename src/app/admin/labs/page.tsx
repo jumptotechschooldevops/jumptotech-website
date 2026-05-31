@@ -28,7 +28,7 @@ export default function AdminLabsPage() {
     const { data } = await supabase.from('modules').select('*').order('title');
     if (data) {
       setModules(data);
-      if (data.length > 0 && !selectedModuleId) setSelectedModuleId(data[0].id);
+      if (data.length > 0 && !selectedModuleId) setSelectedModuleId((data as DbModule[])[0].id);
     }
     setLoading(false);
   };
