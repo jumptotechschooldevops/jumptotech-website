@@ -79,7 +79,10 @@ export default function AdminProjectsPage() {
         if (!prev) return prev;
 
         if (isArray) {
-          const existing = (prev[fieldName] as string[]) || [];
+          let existing = (prev[fieldName] as string[]) || [];
+          if (typeof existing === 'string') {
+            existing = (existing as string).split(',').map(t => t.trim()).filter(Boolean);
+          }
           return { ...prev, [fieldName]: existing.filter(url => url !== fileUrl) };
         } else {
           return { ...prev, [fieldName]: null };
@@ -129,7 +132,10 @@ export default function AdminProjectsPage() {
 
     if (isArray) {
       setCurrentProject(prev => {
-        const existing = (prev?.[fieldName] as string[]) || [];
+        let existing = (prev?.[fieldName] as string[]) || [];
+        if (typeof existing === 'string') {
+          existing = (existing as string).split(',').map(t => t.trim()).filter(Boolean);
+        }
         return { ...prev, [fieldName]: [...existing, ...urls] };
       });
     } else {
@@ -357,7 +363,7 @@ export default function AdminProjectsPage() {
                       </label>
                       {currentProject?.screenshot_urls?.length ? (
                         <div className="mt-2 text-xs text-green-600 flex flex-col gap-1">
-                          {currentProject.screenshot_urls.map((url, i) => (
+                          {(Array.isArray(currentProject.screenshot_urls) ? currentProject.screenshot_urls : typeof currentProject.screenshot_urls === 'string' ? (currentProject.screenshot_urls as string).split(',').map(t=>t.trim()).filter(Boolean) : []).map((url, i) => (
                             <div key={i} className="flex items-center justify-between">
                               <span className="truncate mr-2">Image {i+1}</span>
                               <button type="button" onClick={(e) => { e.preventDefault(); deleteUploadedFile('student-project-images', url, 'screenshot_urls', true); }} className="text-red-500 hover:text-red-700 flex items-center"><X size={14} className="mr-1"/> Remove</button>
@@ -376,7 +382,7 @@ export default function AdminProjectsPage() {
                       </label>
                       {currentProject?.video_urls?.length ? (
                         <div className="mt-2 text-xs text-green-600 flex flex-col gap-1">
-                          {currentProject.video_urls.map((url, i) => (
+                          {(Array.isArray(currentProject.video_urls) ? currentProject.video_urls : typeof currentProject.video_urls === 'string' ? (currentProject.video_urls as string).split(',').map(t=>t.trim()).filter(Boolean) : []).map((url, i) => (
                             <div key={i} className="flex items-center justify-between">
                               <span className="truncate mr-2">Video {i+1}</span>
                               <button type="button" onClick={(e) => { e.preventDefault(); deleteUploadedFile('student-project-videos', url, 'video_urls', true); }} className="text-red-500 hover:text-red-700 flex items-center"><X size={14} className="mr-1"/> Remove</button>

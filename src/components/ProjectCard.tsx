@@ -23,6 +23,12 @@ export type ProjectProps = {
 export function ProjectCard({ project }: { project: StudentProject | ProjectProps }) {
   const imageUrl = project.thumbnail_url || "https://images.unsplash.com/photo-1667372393119-3d4c48d07fc9?auto=format&fit=crop&q=80&w=800";
 
+  const safeTechnologies = Array.isArray(project.technologies)
+    ? project.technologies
+    : typeof project.technologies === 'string'
+    ? (project.technologies as string).split(',').map(t => t.trim()).filter(Boolean)
+    : [];
+
   return (
     <div className="group flex flex-col bg-[var(--card-bg)] border border-[var(--border)] rounded-2xl overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
       <div className="relative h-48 w-full overflow-hidden">
@@ -52,7 +58,7 @@ export function ProjectCard({ project }: { project: StudentProject | ProjectProp
         </p>
 
         <div className="flex flex-wrap gap-2 mb-6">
-          {(project.technologies || []).map(tech => (
+          {safeTechnologies.map(tech => (
             <span key={tech} className="px-2.5 py-1 rounded-md text-xs font-medium bg-[#185FA5]/10 text-[#185FA5] border border-[#185FA5]/20">
               {tech}
             </span>
