@@ -221,7 +221,24 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                     >
                       <div
                         className={`flex items-start gap-3 p-4 rounded-xl transition-colors ${role !== "visitor" ? "cursor-pointer hover:bg-[#185FA5]/5" : "opacity-80"}`}
-                        onClick={() => role !== "visitor" ? router.push(`/modules/${mod.slug}/${lecture.id}`) : null}
+                        onClick={() => {
+                          if (role === "visitor") return;
+
+                          const isExternal = lecture.lecture_type === "external";
+                          const destHref = isExternal ? lecture.external_url : `/modules/${mod.slug}/${lecture.id}`;
+
+                          console.log("Lecture Clicked:");
+                          console.log("- ID:", lecture.id);
+                          console.log("- Title:", lecture.title);
+                          console.log("- URL:", isExternal ? lecture.external_url : "Internal Page");
+                          console.log("- Destination Href:", destHref);
+
+                          if (isExternal && destHref) {
+                            window.open(destHref, "_blank");
+                          } else {
+                            router.push(destHref as string);
+                          }
+                        }}
                       >
                         {/* Number / check — click only toggles completion */}
                         <div
