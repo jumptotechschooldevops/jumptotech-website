@@ -33,7 +33,7 @@ export default function AdminLabsPage() {
     setLoading(false);
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   async function fetchLabs(moduleId: string) {
     setLoading(true);
     const { data } = await supabase.from('labs').select('*').eq('module_id', moduleId).order('order_index');

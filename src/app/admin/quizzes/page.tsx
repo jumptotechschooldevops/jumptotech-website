@@ -34,7 +34,7 @@ export default function AdminQuizzesPage() {
     setLoading(false);
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   async function fetchQuizzes(moduleId: string) {
     setLoading(true);
     const { data } = await supabase.from('quizzes').select('*').eq('module_id', moduleId);
