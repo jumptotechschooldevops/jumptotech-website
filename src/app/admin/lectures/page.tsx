@@ -120,6 +120,7 @@ export default function AdminLecturesPage() {
       video_url: formVideoUrl,
       pdf_url: formPdfUrl,
       module_slug: selectedModuleSlug,
+      published: true, // Auto publish on save for seamless flow
     };
 
     if (editingLecture) {
