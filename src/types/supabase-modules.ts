@@ -15,7 +15,7 @@ export interface DbModule {
 
 export interface DbLecture {
   id: string;
-  module_id: string;
+  module_slug: string;
   title: string;
   description: string | null;
   content: string | null;
@@ -29,7 +29,7 @@ export interface DbLecture {
 
 export interface DbLab {
   id: string;
-  module_id: string;
+  module_slug: string;
   title: string;
   description: string | null;
   difficulty: string;
@@ -41,7 +41,7 @@ export interface DbLab {
 
 export interface DbQuiz {
   id: string;
-  module_id: string;
+  module_slug: string;
   title: string;
   description: string | null;
   passing_score: number;

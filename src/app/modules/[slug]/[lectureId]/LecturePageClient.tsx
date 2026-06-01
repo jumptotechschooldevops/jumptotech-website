@@ -18,6 +18,7 @@ import {
   FlaskConical,
   PlayCircle,
   Award,
+  FileText,
 } from "lucide-react";
 
 interface Props {
@@ -178,6 +179,30 @@ export function LecturePageClient({ slug, lectureId }: Props) {
               <Markdown remarkPlugins={[remarkGfm]} components={mdComponents}>
                 {content}
               </Markdown>
+
+              {lecture.video_url && (
+                <div className="mt-8 p-4 rounded-xl border border-gray-800 bg-gray-900/50">
+                  <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-3">
+                    <PlayCircle size={20} className="text-[#185FA5]" />
+                    Video Resource
+                  </h3>
+                  <a href={lecture.video_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline break-all">
+                    {lecture.video_url}
+                  </a>
+                </div>
+              )}
+
+              {lecture.pdf_url && (
+                <div className="mt-4 p-4 rounded-xl border border-gray-800 bg-gray-900/50">
+                  <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-3">
+                    <FileText size={20} className="text-[#1D9E75]" />
+                    PDF Resource
+                  </h3>
+                  <a href={lecture.pdf_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline break-all">
+                    {lecture.pdf_url}
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* Bottom navigation */}
