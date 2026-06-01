@@ -124,10 +124,21 @@ export default function AdminLecturesPage() {
     };
 
     if (editingLecture) {
-      await supabase.from('lectures').update(payload).eq('id', editingLecture.id);
+      const { error } = await supabase.from('lectures').update(payload).eq('id', editingLecture.id);
+      if (error) {
+        console.error("Supabase update error:", error);
+        alert(`Error saving lecture: ${error.message}`);
+        return;
+      }
     } else {
       const newOrderIndex = lectures.length;
-      await supabase.from('lectures').insert([{ ...payload, order_index: newOrderIndex }]);
+      const { data, error } = await supabase.from('lectures').insert([{ ...payload, order_index: newOrderIndex }]).select();
+      if (error) {
+        console.error("Supabase insert error:", error);
+        alert(`Error creating lecture: ${error.message}`);
+        return;
+      }
+      console.log("Supabase insert success, returned data:", data);
     }
 
     closeModal();

@@ -76,7 +76,12 @@ export default function AdminLabsPage() {
     if (!title) return;
     const selectedMod = modules.find(m => m.id === moduleId);
     if (!selectedMod) return;
-    await supabase.from('labs').insert([{ title, module_slug: selectedMod.slug, difficulty: 'beginner', duration: '30 min', published: true }]);
+    const { error } = await supabase.from('labs').insert([{ title, module_slug: selectedMod.slug, difficulty: 'beginner', duration: '30 min', published: true }]);
+    if (error) {
+      console.error("Supabase insert error:", error);
+      alert(`Error creating lab: ${error.message}`);
+      return;
+    }
     fetchLabs(moduleId);
   };
 
