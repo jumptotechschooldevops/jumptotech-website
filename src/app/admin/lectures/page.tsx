@@ -32,6 +32,12 @@ export default function AdminLecturesPage() {
   useEffect(() => {
     if (selectedModuleSlug) {
       fetchLectures(selectedModuleSlug);
+
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('action') === 'add') {
+        openAddModalFor(selectedModuleSlug);
+        window.history.replaceState({}, '', window.location.pathname + "?moduleSlug=" + selectedModuleSlug);
+      }
     } else {
       setLectures([]);
     }
@@ -41,10 +47,30 @@ export default function AdminLecturesPage() {
     const { data } = await supabase.from('modules').select('*').order('title');
     if (data) {
       setModules(data);
-      if (data.length > 0 && !selectedModuleSlug) setSelectedModuleSlug(data[0].slug);
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const moduleSlugParam = urlParams.get('moduleSlug');
+
+      if (moduleSlugParam && data.some(m => m.slug === moduleSlugParam)) {
+        setSelectedModuleSlug(moduleSlugParam);
+      } else if (data.length > 0 && !selectedModuleSlug) {
+        setSelectedModuleSlug(data[0].slug);
+      }
     }
     setLoading(false);
   }
+
+  const openAddModalFor = (modSlug: string) => {
+    setEditingLecture(null);
+    setFormTitle("");
+    setFormDescription("");
+    setFormContent("");
+    setFormType("reading");
+    setFormDuration("10 min");
+    setFormVideoUrl("");
+    setFormPdfUrl("");
+    setIsModalOpen(true);
+  };
 
   async function fetchLectures(moduleSlug: string) {
     setLoading(true);
@@ -62,15 +88,7 @@ export default function AdminLecturesPage() {
 
   const openAddModal = () => {
     if (!selectedModuleSlug) return alert('Select a module first');
-    setEditingLecture(null);
-    setFormTitle("");
-    setFormDescription("");
-    setFormContent("");
-    setFormType("reading");
-    setFormDuration("10 min");
-    setFormVideoUrl("");
-    setFormPdfUrl("");
-    setIsModalOpen(true);
+    openAddModalFor(selectedModuleSlug);
   };
 
   const openEditModal = (lec: DbLecture) => {

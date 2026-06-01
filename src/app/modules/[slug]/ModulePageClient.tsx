@@ -32,6 +32,7 @@ interface Props {
 }
 
 export function ModulePageClient({ initialModuleSlug }: Props) {
+  const router = useRouter();
   const [mod, setMod] = useState<DbModule | null>(null);
   const [lectures, setLectures] = useState<DbLecture[]>([]);
   const [labs, setLabs] = useState<DbLab[]>([]);
@@ -40,7 +41,6 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
   const { mounted, completedLectures, completedLabs, toggleLecture, toggleLab } = useProgress(mod ? mod.id : "");
   const { role } = useAuth();
 
-  const [expandedLectures, setExpandedLectures] = useState<Set<string>>(new Set());
   const [sidebarLecturesOpen, setSidebarLecturesOpen] = useState(true);
   const [sidebarLabsOpen, setSidebarLabsOpen] = useState(false);
 
@@ -96,15 +96,6 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
   const completedCount = completedLectures.length + completedLabs.length;
   const progressPct = totalItems > 0 ? Math.round((completedCount / totalItems) * 100) : 0;
   const isComplete = progressPct === 100;
-
-  const toggleExpanded = (id: string) => {
-    setExpandedLectures((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
 
   return (
     <div className="bg-[var(--background)]">
@@ -219,7 +210,6 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
               <div className="space-y-2">
                 {lectures.map((lecture, idx) => {
                   const isCompleted = mounted && completedLectures.includes(lecture.id);
-                  const isExpanded = expandedLectures.has(lecture.id);
                   return (
                     <div
                       key={lecture.id}
@@ -231,7 +221,7 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                     >
                       <div
                         className={`flex items-start gap-3 p-4 rounded-xl transition-colors ${role !== "visitor" ? "cursor-pointer hover:bg-[#185FA5]/5" : "opacity-80"}`}
-                        onClick={() => role !== "visitor" ? toggleExpanded(lecture.id) : null}
+                        onClick={() => role !== "visitor" ? router.push(`/modules/${mod.slug}/${lecture.id}`) : null}
                       >
                         {/* Number / check — click only toggles completion */}
                         <div
@@ -262,9 +252,9 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                               {role === "visitor" ? (
                                 <span className="text-xs text-[var(--muted)] font-medium">Locked</span>
                               ) : (
-                                <ChevronDown
+                                <ExternalLink
                                   size={14}
-                                  className={`text-[var(--muted)] transition-transform duration-200 ${isExpanded ? "rotate-180" : ""}`}
+                                  className="text-[var(--muted)] hover:text-[#185FA5] transition-colors duration-200"
                                 />
                               )}
                             </div>
@@ -272,18 +262,6 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                           <p className="text-xs text-[var(--muted)] mt-1 leading-relaxed">{lecture.description}</p>
                         </div>
                       </div>
-
-                      {isExpanded && (
-                        <div className="px-4 pb-4 ml-8">
-                          <Link
-                            href={`/modules/${mod.slug}/${lecture.id}`}
-                            className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#185FA5] hover:underline"
-                          >
-                            Read full lecture
-                            <ExternalLink size={9} />
-                          </Link>
-                        </div>
-                      )}
                     </div>
                   );
                 })}

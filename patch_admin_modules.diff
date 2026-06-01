@@ -1,0 +1,31 @@
+<<<<<<< SEARCH
+              <td className="py-2 flex gap-2">
+                <button onClick={() => handleTogglePublish(mod.id, mod.published)} className="text-sm bg-gray-200 px-2 py-1 rounded text-black">
+                  {mod.published ? 'Unpublish' : 'Publish'}
+                </button>
+                <button onClick={() => handleDelete(mod.id)} className="text-sm bg-red-600 text-white px-2 py-1 rounded">
+                  Delete
+                </button>
+              </td>
+=======
+              <td className="py-2 flex gap-2 flex-wrap">
+                <Link href={`/admin/lectures?moduleSlug=${mod.slug}`} className="text-sm bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700">
+                  View Lectures
+                </Link>
+                <Link href={`/admin/lectures?moduleSlug=${mod.slug}&action=add`} className="text-sm bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700">
+                  Add Lecture
+                </Link>
+                <Link href={`/admin/labs?moduleId=${mod.id}&action=add`} className="text-sm bg-purple-600 text-white px-2 py-1 rounded hover:bg-purple-700">
+                  Add Lab
+                </Link>
+                <Link href={`/admin/quizzes?moduleId=${mod.id}&action=add`} className="text-sm bg-yellow-600 text-white px-2 py-1 rounded hover:bg-yellow-700">
+                  Add Quiz
+                </Link>
+                <button onClick={() => handleTogglePublish(mod.id, mod.published)} className="text-sm bg-gray-200 px-2 py-1 rounded text-black hover:bg-gray-300">
+                  {mod.published ? 'Unpublish' : 'Publish'}
+                </button>
+                <button onClick={() => handleDelete(mod.id)} className="text-sm bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700">
+                  Delete
+                </button>
+              </td>
+>>>>>>> REPLACE
