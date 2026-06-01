@@ -224,19 +224,16 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                         onClick={() => {
                           if (role === "visitor") return;
 
-                          const isExternal = lecture.lecture_type === "external";
-                          const destHref = isExternal ? lecture.external_url : `/modules/${mod.slug}/${lecture.id}`;
+                          const externalTarget = lecture.pdf_url || lecture.external_url;
+                          const destination = externalTarget ? externalTarget : `/modules/${mod.slug}/${lecture.id}`;
 
-                          console.log("Lecture Clicked:");
-                          console.log("- ID:", lecture.id);
-                          console.log("- Title:", lecture.title);
-                          console.log("- URL:", isExternal ? lecture.external_url : "Internal Page");
-                          console.log("- Destination Href:", destHref);
+                          console.log("Lecture clicked:", lecture);
+                          console.log("Destination:", destination);
 
-                          if (isExternal && destHref) {
-                            window.open(destHref, "_blank");
+                          if (externalTarget) {
+                            window.open(destination, "_blank");
                           } else {
-                            router.push(destHref as string);
+                            router.push(destination);
                           }
                         }}
                       >
