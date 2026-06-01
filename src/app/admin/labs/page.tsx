@@ -19,6 +19,12 @@ export default function AdminLabsPage() {
   useEffect(() => {
     if (selectedModuleId) {
       fetchLabs(selectedModuleId);
+
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('action') === 'add') {
+        handleAddFor(selectedModuleId);
+        window.history.replaceState({}, '', window.location.pathname + "?moduleId=" + selectedModuleId);
+      }
     } else {
       setLabs([]);
     }
@@ -28,7 +34,14 @@ export default function AdminLabsPage() {
     const { data } = await supabase.from('modules').select('*').order('title');
     if (data) {
       setModules(data);
-      if (data.length > 0 && !selectedModuleId) setSelectedModuleId((data as DbModule[])[0].id);
+      const urlParams = new URLSearchParams(window.location.search);
+      const moduleIdParam = urlParams.get('moduleId');
+
+      if (moduleIdParam && data.some(m => m.id === moduleIdParam)) {
+        setSelectedModuleId(moduleIdParam);
+      } else if (data.length > 0 && !selectedModuleId) {
+        setSelectedModuleId((data as DbModule[])[0].id);
+      }
     }
     setLoading(false);
   };
@@ -53,12 +66,16 @@ export default function AdminLabsPage() {
     }
   };
 
+  const handleAddFor = async (moduleId: string) => {
+    const title = window.prompt('Enter lab title:');
+    if (!title) return;
+    await supabase.from('labs').insert([{ title, module_id: moduleId, difficulty: 'beginner', duration: '30 min' }]);
+    fetchLabs(moduleId);
+  };
+
   const handleAdd = async () => {
     if (!selectedModuleId) return alert('Select a module first');
-    const title = prompt('Enter lab title:');
-    if (!title) return;
-    await supabase.from('labs').insert([{ title, module_id: selectedModuleId, difficulty: 'beginner', duration: '30 min' }]);
-    fetchLabs(selectedModuleId);
+    await handleAddFor(selectedModuleId);
   };
 
   if (!authMounted) return null;

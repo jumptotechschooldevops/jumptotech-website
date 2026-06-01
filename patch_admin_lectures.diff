@@ -1,0 +1,95 @@
+<<<<<<< SEARCH
+  useEffect(() => {
+    fetchModules();
+  }, []);
+
+  useEffect(() => {
+    if (selectedModuleSlug) {
+      fetchLectures(selectedModuleSlug);
+    } else {
+      setLectures([]);
+    }
+  }, [selectedModuleSlug]);
+
+  async function fetchModules() {
+    setLoading(true);
+    const { data } = await supabase.from('modules').select('*').order('title');
+    if (data) {
+      setModules(data);
+      if (data.length > 0 && !selectedModuleSlug) setSelectedModuleSlug(data[0].slug);
+    }
+    setLoading(false);
+  }
+
+  async function fetchLectures(moduleSlug: string) {
+=======
+  useEffect(() => {
+    fetchModules();
+  }, []);
+
+  useEffect(() => {
+    if (selectedModuleSlug) {
+      fetchLectures(selectedModuleSlug);
+
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('action') === 'add') {
+        openAddModalFor(selectedModuleSlug);
+        // Clear the param to avoid reopening on re-renders
+        window.history.replaceState({}, '', window.location.pathname + "?moduleSlug=" + selectedModuleSlug);
+      }
+    } else {
+      setLectures([]);
+    }
+  }, [selectedModuleSlug]);
+
+  async function fetchModules() {
+    setLoading(true);
+    const { data } = await supabase.from('modules').select('*').order('title');
+    if (data) {
+      setModules(data);
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const moduleSlugParam = urlParams.get('moduleSlug');
+
+      if (moduleSlugParam && data.some(m => m.slug === moduleSlugParam)) {
+        setSelectedModuleSlug(moduleSlugParam);
+      } else if (data.length > 0 && !selectedModuleSlug) {
+        setSelectedModuleSlug(data[0].slug);
+      }
+    }
+    setLoading(false);
+  }
+
+  const openAddModalFor = (modSlug: string) => {
+    setEditingLecture(null);
+    setFormTitle("");
+    setFormDescription("");
+    setFormContent("");
+    setFormType("reading");
+    setFormDuration("10 min");
+    setFormVideoUrl("");
+    setFormPdfUrl("");
+    setIsModalOpen(true);
+  };
+
+  async function fetchLectures(moduleSlug: string) {
+>>>>>>> REPLACE
+<<<<<<< SEARCH
+  const openAddModal = () => {
+    if (!selectedModuleSlug) return alert('Select a module first');
+    setEditingLecture(null);
+    setFormTitle("");
+    setFormDescription("");
+    setFormContent("");
+    setFormType("reading");
+    setFormDuration("10 min");
+    setFormVideoUrl("");
+    setFormPdfUrl("");
+    setIsModalOpen(true);
+  };
+=======
+  const openAddModal = () => {
+    if (!selectedModuleSlug) return alert('Select a module first');
+    openAddModalFor(selectedModuleSlug);
+  };
+>>>>>>> REPLACE

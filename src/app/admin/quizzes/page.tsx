@@ -20,6 +20,12 @@ export default function AdminQuizzesPage() {
   useEffect(() => {
     if (selectedModuleId) {
       fetchQuizzes(selectedModuleId);
+
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('action') === 'add') {
+        handleAddFor(selectedModuleId);
+        window.history.replaceState({}, '', window.location.pathname + "?moduleId=" + selectedModuleId);
+      }
     } else {
       setQuizzes([]);
     }
@@ -29,7 +35,15 @@ export default function AdminQuizzesPage() {
     const { data } = await supabase.from('modules').select('*').order('title');
     if (data) {
       setModules(data);
-      if (data.length > 0 && !selectedModuleId) setSelectedModuleId(data[0].id);
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const moduleIdParam = urlParams.get('moduleId');
+
+      if (moduleIdParam && data.some(m => m.id === moduleIdParam)) {
+        setSelectedModuleId(moduleIdParam);
+      } else if (data.length > 0 && !selectedModuleId) {
+        setSelectedModuleId(data[0].id);
+      }
     }
     setLoading(false);
   };
@@ -54,12 +68,16 @@ export default function AdminQuizzesPage() {
     }
   };
 
+  const handleAddFor = async (moduleId: string) => {
+    const title = window.prompt('Enter quiz title:');
+    if (!title) return;
+    await supabase.from('quizzes').insert([{ title, module_id: moduleId }]);
+    fetchQuizzes(moduleId);
+  };
+
   const handleAdd = async () => {
     if (!selectedModuleId) return alert('Select a module first');
-    const title = prompt('Enter quiz title:');
-    if (!title) return;
-    await supabase.from('quizzes').insert([{ title, module_id: selectedModuleId }]);
-    fetchQuizzes(selectedModuleId);
+    await handleAddFor(selectedModuleId);
   };
 
   if (!authMounted) return null;
