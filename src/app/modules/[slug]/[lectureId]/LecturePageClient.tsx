@@ -19,6 +19,7 @@ import {
   PlayCircle,
   Award,
   FileText,
+  ExternalLink,
 } from "lucide-react";
 
 interface Props {
@@ -176,32 +177,49 @@ export function LecturePageClient({ slug, lectureId }: Props) {
             </div>
 
             <div className="prose prose-invert max-w-none mb-12">
-              <Markdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-                {content}
-              </Markdown>
-
-              {lecture.video_url && (
-                <div className="mt-8 p-4 rounded-xl border border-gray-800 bg-gray-900/50">
-                  <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-3">
-                    <PlayCircle size={20} className="text-[#185FA5]" />
-                    Video Resource
-                  </h3>
-                  <a href={lecture.video_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline break-all">
-                    {lecture.video_url}
+              {lecture.lecture_type === "external" && lecture.external_url ? (
+                <div className="p-8 rounded-xl border border-gray-800 bg-gray-900/50 text-center">
+                  <h3 className="text-xl font-bold text-white mb-4">External Resource</h3>
+                  <p className="text-gray-400 mb-6">This lecture is hosted externally. Click below to view the content.</p>
+                  <a
+                    href={lecture.external_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#185FA5] text-white rounded-md hover:bg-[#185FA5]/90 font-medium transition-colors"
+                  >
+                    Open Resource <ExternalLink size={18} />
                   </a>
                 </div>
-              )}
+              ) : (
+                <>
+                  <Markdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+                    {content}
+                  </Markdown>
 
-              {lecture.pdf_url && (
-                <div className="mt-4 p-4 rounded-xl border border-gray-800 bg-gray-900/50">
-                  <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-3">
-                    <FileText size={20} className="text-[#1D9E75]" />
-                    PDF Resource
-                  </h3>
-                  <a href={lecture.pdf_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline break-all">
-                    {lecture.pdf_url}
-                  </a>
-                </div>
+                  {lecture.video_url && (
+                    <div className="mt-8 p-4 rounded-xl border border-gray-800 bg-gray-900/50">
+                      <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-3">
+                        <PlayCircle size={20} className="text-[#185FA5]" />
+                        Video Resource
+                      </h3>
+                      <a href={lecture.video_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline break-all">
+                        {lecture.video_url}
+                      </a>
+                    </div>
+                  )}
+
+                  {lecture.pdf_url && (
+                    <div className="mt-4 p-4 rounded-xl border border-gray-800 bg-gray-900/50">
+                      <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-3">
+                        <FileText size={20} className="text-[#1D9E75]" />
+                        PDF Resource
+                      </h3>
+                      <a href={lecture.pdf_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline break-all">
+                        {lecture.pdf_url}
+                      </a>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
