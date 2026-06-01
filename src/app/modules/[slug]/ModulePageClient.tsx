@@ -66,8 +66,8 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
         .from('lectures')
         .select('*')
         .eq('module_slug', modData.slug)
-
-        ;
+        .eq('published', true)
+        .order('order_index');
 
       if (lecData) setLectures(lecData);
 
@@ -76,8 +76,8 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
         .from('labs')
         .select('*')
         .eq('module_slug', modData.slug)
-
-        ;
+        .eq('published', true)
+        .order('order_index');
 
       if (labData) setLabs(labData);
 

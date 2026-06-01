@@ -73,7 +73,7 @@ export function LecturePageClient({ slug, lectureId }: Props) {
       }
       setMod(modData);
 
-      const { data: lecData } = await supabase.from('lectures').select('*').eq('module_slug', modData.slug);
+      const { data: lecData } = await supabase.from('lectures').select('*').eq('module_slug', modData.slug).eq('published', true).order('order_index');
       if (lecData) setLectures(lecData);
 
       const { count } = await supabase.from('labs').select('*', { count: 'exact', head: true }).eq('module_slug', modData.slug).eq('published', true);

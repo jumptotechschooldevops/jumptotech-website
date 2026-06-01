@@ -78,7 +78,7 @@ export default function AdminQuizzesPage() {
     if (!title) return;
     const selectedMod = modules.find(m => m.id === moduleId);
     if (!selectedMod) return;
-    await supabase.from('quizzes').insert([{ title, module_slug: selectedMod.slug }]);
+    await supabase.from('quizzes').insert([{ title, module_slug: selectedMod.slug, published: true }]);
     fetchQuizzes(moduleId);
   };
 
