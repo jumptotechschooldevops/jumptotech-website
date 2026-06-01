@@ -51,7 +51,12 @@ export default function AdminQuizzesPage() {
 
   async function fetchQuizzes(moduleId: string) {
     setLoading(true);
-    const { data } = await supabase.from('quizzes').select('*').eq('module_id', moduleId);
+    const selectedMod = modules.find(m => m.id === moduleId);
+    if (!selectedMod) {
+      setLoading(false);
+      return;
+    }
+    const { data } = await supabase.from('quizzes').select('*').eq('module_slug', selectedMod.slug);
     if (data) setQuizzes(data);
     setLoading(false);
   };
@@ -71,7 +76,9 @@ export default function AdminQuizzesPage() {
   const handleAddFor = async (moduleId: string) => {
     const title = window.prompt('Enter quiz title:');
     if (!title) return;
-    await supabase.from('quizzes').insert([{ title, module_id: moduleId }]);
+    const selectedMod = modules.find(m => m.id === moduleId);
+    if (!selectedMod) return;
+    await supabase.from('quizzes').insert([{ title, module_slug: selectedMod.slug }]);
     fetchQuizzes(moduleId);
   };
 
