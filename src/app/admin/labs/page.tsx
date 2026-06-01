@@ -49,7 +49,12 @@ export default function AdminLabsPage() {
 
   async function fetchLabs(moduleId: string) {
     setLoading(true);
-    const { data } = await supabase.from('labs').select('*').eq('module_id', moduleId).order('order_index');
+    const selectedMod = modules.find(m => m.id === moduleId);
+    if (!selectedMod) {
+      setLoading(false);
+      return;
+    }
+    const { data } = await supabase.from('labs').select('*').eq('module_slug', selectedMod.slug).order('order_index');
     if (data) setLabs(data);
     setLoading(false);
   };
@@ -69,7 +74,9 @@ export default function AdminLabsPage() {
   const handleAddFor = async (moduleId: string) => {
     const title = window.prompt('Enter lab title:');
     if (!title) return;
-    await supabase.from('labs').insert([{ title, module_id: moduleId, difficulty: 'beginner', duration: '30 min' }]);
+    const selectedMod = modules.find(m => m.id === moduleId);
+    if (!selectedMod) return;
+    await supabase.from('labs').insert([{ title, module_slug: selectedMod.slug, difficulty: 'beginner', duration: '30 min' }]);
     fetchLabs(moduleId);
   };
 
