@@ -33,7 +33,7 @@ export default function AdminLecturesPage() {
     setLoading(false);
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
   async function fetchLectures(moduleId: string) {
     setLoading(true);
     const { data } = await supabase.from('lectures').select('*').eq('module_slug', modules.find(m => m.id === moduleId)?.slug || '');
@@ -133,7 +133,7 @@ export default function AdminLecturesPage() {
                 <td className="py-2 text-gray-500">☰</td>
                 <td className="py-2">{lec.title}</td>
                 <td className="py-2">{lec.type}</td>
-                <td className="py-2">'Published'</td>
+                <td className="py-2">&apos;Published&apos;</td>
                 <td className="py-2 flex gap-2">
                   <button onClick={() => handleDummyToggle(lec.id, lec.published)} className="text-sm bg-gray-200 px-2 py-1 rounded text-black">
                     {'Cannot unpublish'}
