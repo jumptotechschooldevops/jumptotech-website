@@ -23,6 +23,8 @@ export interface DbLecture {
   type: string;
   video_url: string | null;
   pdf_url: string | null;
+  lecture_type: string;
+  external_url: string | null;
   published: boolean;
   order_index: number;
 }

@@ -24,6 +24,8 @@ export default function AdminLecturesPage() {
   const [formDuration, setFormDuration] = useState("10 min");
   const [formVideoUrl, setFormVideoUrl] = useState("");
   const [formPdfUrl, setFormPdfUrl] = useState("");
+  const [formLectureType, setFormLectureType] = useState("internal");
+  const [formExternalUrl, setFormExternalUrl] = useState("");
 
   useEffect(() => {
     fetchModules();
@@ -69,6 +71,8 @@ export default function AdminLecturesPage() {
     setFormDuration("10 min");
     setFormVideoUrl("");
     setFormPdfUrl("");
+    setFormLectureType("internal");
+    setFormExternalUrl("");
     setIsModalOpen(true);
   };
 
@@ -100,6 +104,8 @@ export default function AdminLecturesPage() {
     setFormDuration(lec.duration || "10 min");
     setFormVideoUrl(lec.video_url || "");
     setFormPdfUrl(lec.pdf_url || "");
+    setFormLectureType(lec.lecture_type || "internal");
+    setFormExternalUrl(lec.external_url || "");
     setIsModalOpen(true);
   };
 
@@ -119,6 +125,8 @@ export default function AdminLecturesPage() {
       duration: formDuration,
       video_url: formVideoUrl,
       pdf_url: formPdfUrl,
+      lecture_type: formLectureType,
+      external_url: formLectureType === "external" ? formExternalUrl : null,
       module_slug: selectedModuleSlug,
       published: true, // Auto publish on save for seamless flow
     };
@@ -314,14 +322,39 @@ export default function AdminLecturesPage() {
               </div>
 
               <div>
-                <label className="block mb-1 text-sm text-gray-400">Content (Markdown)</label>
-                <textarea
-                  value={formContent}
-                  onChange={e => setFormContent(e.target.value)}
-                  className="w-full bg-transparent border border-gray-700 rounded p-2 text-white h-48 font-mono text-sm"
-                  placeholder="Write the lecture content in markdown..."
-                />
+                <label className="block mb-1 text-sm text-gray-400">Lecture Mode</label>
+                <select
+                  value={formLectureType}
+                  onChange={e => setFormLectureType(e.target.value)}
+                  className="w-full bg-transparent border border-gray-700 rounded p-2 text-white [&>option]:text-black"
+                >
+                  <option value="internal">Internal (Markdown)</option>
+                  <option value="external">External (URL Redirect)</option>
+                </select>
               </div>
+
+              {formLectureType === "external" ? (
+                <div>
+                  <label className="block mb-1 text-sm text-gray-400">External URL</label>
+                  <input
+                    type="text"
+                    value={formExternalUrl}
+                    onChange={e => setFormExternalUrl(e.target.value)}
+                    className="w-full bg-transparent border border-gray-700 rounded p-2 text-white"
+                    placeholder="https://example.com/external-resource"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="block mb-1 text-sm text-gray-400">Content (Markdown)</label>
+                  <textarea
+                    value={formContent}
+                    onChange={e => setFormContent(e.target.value)}
+                    className="w-full bg-transparent border border-gray-700 rounded p-2 text-white h-48 font-mono text-sm"
+                    placeholder="Write the lecture content in markdown..."
+                  />
+                </div>
+              )}
 
               <div className="flex justify-end gap-3 mt-6">
                 <button onClick={closeModal} className="px-4 py-2 border border-gray-700 rounded hover:bg-gray-800">
