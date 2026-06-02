@@ -233,7 +233,7 @@ export default function AdminLecturesPage() {
             {lectures.map((lec, idx) => (
               <tr
                 key={lec.id}
-                className="border-b border-gray-800 cursor-move hover:bg-gray-800/50 text-gray-300"
+                className="border-b border-gray-800 cursor-move hover:bg-gray-800/50 hover:text-white text-gray-300"
                 draggable
                 onDragStart={(e) => handleDragStart(e, idx)}
                 onDragOver={(e) => e.preventDefault()}
@@ -303,7 +303,7 @@ export default function AdminLecturesPage() {
                 <select
                   value={formType}
                   onChange={e => setFormType(e.target.value)}
-                  className="w-full bg-transparent border border-gray-700 rounded p-2 text-white [&>option]:text-black"
+                  className="w-full bg-[#0a0a0a] border border-gray-700 rounded p-2 text-white"
                 >
                   <option value="reading">Reading</option>
                   <option value="video">Video</option>
