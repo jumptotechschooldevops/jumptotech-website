@@ -224,17 +224,7 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                         onClick={() => {
                           if (role === "visitor") return;
 
-                          const externalLink = lecture.pdf_url || lecture.external_url;
-                          const destHref = externalLink ? externalLink : `/modules/${mod.slug}/${lecture.id}`;
-
-                          console.log("Lecture clicked:", lecture);
-                          console.log("Destination:", destHref);
-
-                          if (externalLink) {
-                            window.open(destHref, "_blank");
-                          } else {
-                            router.push(destHref as string);
-                          }
+                          router.push(`/modules/${mod.slug}/${lecture.id}`);
                         }}
                       >
                         {/* Number / check — click only toggles completion */}
