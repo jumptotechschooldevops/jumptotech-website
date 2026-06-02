@@ -27,22 +27,12 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Protect /modules/[slug]/[lectureId] (course content)
-  // Use robust segment parsing to handle trailing slashes correctly
-  const pathSegments = path.split('/').filter(Boolean);
-  if (pathSegments.length > 0 && pathSegments[0] === 'modules' && pathSegments.length > 2) {
-    if (!isAuth) {
-      return NextResponse.redirect(new URL('/', request.url));
-    }
-  }
-
   return NextResponse.next();
 }
 
 export const config = {
   matcher: [
     '/admin/:path*',
-    '/student/:path*',
-    '/modules/:slug/:lectureId*'
+    '/student/:path*'
   ]
 };

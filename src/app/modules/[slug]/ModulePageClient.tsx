@@ -223,6 +223,9 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                         href={role !== "visitor" ? `/modules/${mod.slug}/${lecture.id}` : "#"}
                         className={`group flex items-start gap-3 p-4 rounded-xl transition-colors ${role !== "visitor" ? "cursor-pointer hover:bg-[#185FA5]/5" : "opacity-80 cursor-default"}`}
                         onClick={(e) => {
+                          console.log("Lecture Clicked:");
+                          console.log("Lecture ID:", lecture.id);
+                          console.log("Generated href:", role !== "visitor" ? `/modules/${mod.slug}/${lecture.id}` : "#");
                           if (role === "visitor") {
                             e.preventDefault();
                           }

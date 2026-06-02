@@ -27,31 +27,6 @@ interface Props {
   lectureId: string;
 }
 
-const mdComponents = {
-  h1: ({ children }: { children?: React.ReactNode }) => <h1 className="md-h1">{children}</h1>,
-  h2: ({ children }: { children?: React.ReactNode }) => <h2 className="md-h2">{children}</h2>,
-  h3: ({ children }: { children?: React.ReactNode }) => <h3 className="md-h3">{children}</h3>,
-  h4: ({ children }: { children?: React.ReactNode }) => <h4 className="md-h4">{children}</h4>,
-  h5: ({ children }: { children?: React.ReactNode }) => <h5 className="md-h5">{children}</h5>,
-  p: ({ children }: { children?: React.ReactNode }) => <p className="md-p">{children}</p>,
-  ul: ({ children }: { children?: React.ReactNode }) => <ul className="md-ul">{children}</ul>,
-  ol: ({ children }: { children?: React.ReactNode }) => <ol className="md-ol">{children}</ol>,
-  li: ({ children }: { children?: React.ReactNode }) => <li className="md-li">{children}</li>,
-  blockquote: ({ children }: { children?: React.ReactNode }) => <blockquote className="md-blockquote">{children}</blockquote>,
-  hr: () => <hr className="md-hr" />,
-  pre: ({ children }: { children?: React.ReactNode }) => <pre className="md-pre">{children}</pre>,
-  code: ({ inline, children }: { inline?: boolean; children?: React.ReactNode }) =>
-    inline
-      ? <code className="md-inline-code">{children}</code>
-      : <code className="md-code">{children}</code>,
-  table: ({ children }: { children?: React.ReactNode }) => (
-    <div className="md-table-wrap"><table className="md-table">{children}</table></div>
-  ),
-  th: ({ children }: { children?: React.ReactNode }) => <th className="md-th">{children}</th>,
-  td: ({ children }: { children?: React.ReactNode }) => <td className="md-td">{children}</td>,
-  tr: ({ children }: { children?: React.ReactNode }) => <tr className="md-tr">{children}</tr>,
-};
-
 export function LecturePageClient({ slug, lectureId }: Props) {
   const router = useRouter();
   const { loggedIn, mounted: authMounted } = useAuth();
@@ -177,7 +152,7 @@ export function LecturePageClient({ slug, lectureId }: Props) {
             </div>
 
             <div className="prose prose-invert max-w-none mb-12">
-              <Markdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+              <Markdown remarkPlugins={[remarkGfm]}>
                 {content}
               </Markdown>
 
@@ -198,7 +173,7 @@ export function LecturePageClient({ slug, lectureId }: Props) {
                 </div>
               )}
 
-              {lecture.pdf_url && (
+              {lecture.pdf_url && lecture.pdf_url.toLowerCase().endsWith('.pdf') && (
                 <div className="mt-6 p-4 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-[#1D9E75]/10 rounded-lg">
