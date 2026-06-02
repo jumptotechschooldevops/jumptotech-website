@@ -219,23 +219,24 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                           : "border-[var(--border)] bg-[var(--card-bg)]"
                       }`}
                     >
-                      <div
-                        className={`flex items-start gap-3 p-4 rounded-xl transition-colors ${role !== "visitor" ? "cursor-pointer hover:bg-[#185FA5]/5" : "opacity-80"}`}
-                        onClick={() => {
-                          if (role === "visitor") return;
-
-                          router.push(`/modules/${mod.slug}/${lecture.id}`);
+                      <Link
+                        href={role !== "visitor" ? `/modules/${mod.slug}/${lecture.id}` : "#"}
+                        className={`group flex items-start gap-3 p-4 rounded-xl transition-colors ${role !== "visitor" ? "cursor-pointer hover:bg-[#185FA5]/5" : "opacity-80 cursor-default"}`}
+                        onClick={(e) => {
+                          if (role === "visitor") {
+                            e.preventDefault();
+                          }
                         }}
                       >
                         {/* Number / check — click only toggles completion */}
                         <div
                           className="flex-shrink-0 mt-0.5"
-                          onClick={(e) => { e.stopPropagation(); mounted && toggleLecture(lecture.id); }}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); mounted && toggleLecture(lecture.id); }}
                         >
                           {isCompleted ? (
                             <CheckCircle2 size={20} className="text-[#1D9E75]" />
                           ) : (
-                            <div className="w-5 h-5 rounded-full border-2 border-[var(--border)] flex items-center justify-center hover:border-[#185FA5] transition-colors">
+                            <div className="w-5 h-5 rounded-full border-2 border-[var(--border)] flex items-center justify-center hover:border-[#185FA5] transition-colors bg-[var(--card-bg)]">
                               <span className="text-[10px] text-[var(--muted)] font-bold">{idx + 1}</span>
                             </div>
                           )}
@@ -265,7 +266,7 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                           </div>
                           <p className="text-xs text-[var(--muted)] mt-1 leading-relaxed">{lecture.description}</p>
                         </div>
-                      </div>
+                      </Link>
                     </div>
                   );
                 })}
@@ -304,7 +305,7 @@ export function ModulePageClient({ initialModuleSlug }: Props) {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2 mb-1">
                           <p
-                            className={`text-sm font-semibold leading-snug ${
+                              className={`text-sm font-semibold leading-snug group-hover:text-[#185FA5] transition-colors ${
                               isCompleted ? "line-through text-[var(--muted)]" : "text-[var(--foreground)]"
                             }`}
                           >

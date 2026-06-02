@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Eye } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { DbLecture, DbModule } from "@/types/supabase-modules";
+import Link from "next/link";
 
 export default function AdminLecturesPage() {
   const { role, authMounted } = useAuth();
@@ -232,17 +233,24 @@ export default function AdminLecturesPage() {
             {lectures.map((lec, idx) => (
               <tr
                 key={lec.id}
-                className="border-b cursor-move hover:bg-gray-800"
+                className="border-b border-gray-800 cursor-move hover:bg-gray-800/50 text-gray-300"
                 draggable
                 onDragStart={(e) => handleDragStart(e, idx)}
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => handleDrop(e, idx)}
               >
                 <td className="py-2 text-gray-500">☰</td>
-                <td className="py-2">{lec.title}</td>
+                <td className="py-2">
+                  <Link href={`/modules/${selectedModuleSlug}/${lec.id}`} className="hover:text-blue-400 hover:underline cursor-pointer">
+                    {lec.title}
+                  </Link>
+                </td>
                 <td className="py-2">{lec.type}</td>
                 <td className="py-2">{lec.duration}</td>
-                <td className="py-2 flex gap-2">
+                <td className="py-2 flex gap-2 items-center">
+                  <Link href={`/modules/${selectedModuleSlug}/${lec.id}`} className="text-sm bg-blue-600/20 text-blue-400 hover:bg-blue-600/40 px-2 py-1 rounded flex items-center gap-1 transition-colors">
+                    <Eye size={14} /> Preview
+                  </Link>
                   <button onClick={() => openEditModal(lec)} className="text-sm bg-gray-600 text-white px-2 py-1 rounded">
                     Edit
                   </button>
