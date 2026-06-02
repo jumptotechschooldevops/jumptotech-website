@@ -1,0 +1,26 @@
+--- src/app/modules/[slug]/ModulePageClient.tsx
++++ src/app/modules/[slug]/ModulePageClient.tsx
+@@ -194,18 +194,15 @@
+                         onClick={() => {
+                           if (role === "visitor") return;
+
+-                          const isExternal = lecture.lecture_type === "external";
+-                          const destHref = isExternal ? lecture.external_url : `/modules/${mod.slug}/${lecture.id}`;
++                          const externalLink = lecture.pdf_url || lecture.external_url;
++                          const destHref = externalLink ? externalLink : `/modules/${mod.slug}/${lecture.id}`;
+
+-                          console.log("Lecture Clicked:");
+-                          console.log("- ID:", lecture.id);
+-                          console.log("- Title:", lecture.title);
+-                          console.log("- URL:", isExternal ? lecture.external_url : "Internal Page");
+-                          console.log("- Destination Href:", destHref);
++                          console.log("Lecture clicked:", lecture);
++                          console.log("Destination:", destHref);
+
+-                          if (isExternal && destHref) {
++                          if (externalLink) {
+                             window.open(destHref, "_blank");
+                           } else {
+                             router.push(destHref as string);
+                           }
+                         }}
