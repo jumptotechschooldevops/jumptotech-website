@@ -177,49 +177,73 @@ export function LecturePageClient({ slug, lectureId }: Props) {
             </div>
 
             <div className="prose prose-invert max-w-none mb-12">
-              {lecture.lecture_type === "external" && lecture.external_url ? (
-                <div className="p-8 rounded-xl border border-gray-800 bg-gray-900/50 text-center">
-                  <h3 className="text-xl font-bold text-white mb-4">External Resource</h3>
-                  <p className="text-gray-400 mb-6">This lecture is hosted externally. Click below to view the content.</p>
+              <Markdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+                {content}
+              </Markdown>
+
+              {lecture.video_url && (
+                <div className="mt-8 p-4 rounded-xl border border-[var(--border)] bg-[var(--card-bg)]">
+                  <h3 className="text-lg font-semibold text-[var(--foreground)] flex items-center gap-2 mb-4">
+                    <PlayCircle size={20} className="text-[#185FA5]" />
+                    Video Resource
+                  </h3>
+                  <div className="aspect-video w-full rounded-lg overflow-hidden bg-black">
+                    <iframe
+                      src={lecture.video_url.includes('youtube.com/watch?v=') ? lecture.video_url.replace('watch?v=', 'embed/') : lecture.video_url}
+                      className="w-full h-full"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    ></iframe>
+                  </div>
+                </div>
+              )}
+
+              {lecture.pdf_url && (
+                <div className="mt-6 p-4 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-[#1D9E75]/10 rounded-lg">
+                      <FileText size={24} className="text-[#1D9E75]" />
+                    </div>
+                    <div>
+                      <h3 className="text-[var(--foreground)] font-semibold m-0">Lecture PDF</h3>
+                      <p className="text-sm text-[var(--muted)] m-0">Download the presentation or reading material.</p>
+                    </div>
+                  </div>
                   <a
-                    href={lecture.external_url}
+                    href={lecture.pdf_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#185FA5] text-white rounded-md hover:bg-[#185FA5]/90 font-medium transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-[#1D9E75] text-white rounded-md hover:bg-[#1D9E75]/90 transition-colors font-medium text-sm no-underline"
                   >
-                    Open Resource <ExternalLink size={18} />
+                    Download <ExternalLink size={16} />
                   </a>
                 </div>
-              ) : (
-                <>
-                  <Markdown remarkPlugins={[remarkGfm]} components={mdComponents}>
-                    {content}
-                  </Markdown>
+              )}
 
-                  {lecture.video_url && (
-                    <div className="mt-8 p-4 rounded-xl border border-gray-800 bg-gray-900/50">
-                      <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-3">
-                        <PlayCircle size={20} className="text-[#185FA5]" />
-                        Video Resource
-                      </h3>
-                      <a href={lecture.video_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline break-all">
-                        {lecture.video_url}
+              {lecture.resources && lecture.resources.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-xl font-bold text-[var(--foreground)] mb-4 border-b border-[var(--border)] pb-2">
+                    Additional Resources
+                  </h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {lecture.resources.map((res, idx) => (
+                      <a
+                        key={idx}
+                        href={res.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-4 rounded-xl border border-[var(--border)] bg-[var(--card-bg)] hover:border-[#185FA5]/50 hover:bg-[#185FA5]/5 transition-all no-underline group"
+                      >
+                        <div className="p-2 bg-[var(--muted-bg)] rounded-lg group-hover:bg-[#185FA5]/10 group-hover:text-[#185FA5] transition-colors text-[var(--muted)]">
+                          <ExternalLink size={20} />
+                        </div>
+                        <span className="font-medium text-[var(--foreground)] group-hover:text-[#185FA5] transition-colors line-clamp-2">
+                          {res.title || res.url}
+                        </span>
                       </a>
-                    </div>
-                  )}
-
-                  {lecture.pdf_url && (
-                    <div className="mt-4 p-4 rounded-xl border border-gray-800 bg-gray-900/50">
-                      <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-3">
-                        <FileText size={20} className="text-[#1D9E75]" />
-                        PDF Resource
-                      </h3>
-                      <a href={lecture.pdf_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline break-all">
-                        {lecture.pdf_url}
-                      </a>
-                    </div>
-                  )}
-                </>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
 

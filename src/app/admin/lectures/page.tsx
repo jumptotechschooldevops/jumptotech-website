@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { Plus, X } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { DbLecture, DbModule } from "@/types/supabase-modules";
 
@@ -24,8 +25,7 @@ export default function AdminLecturesPage() {
   const [formDuration, setFormDuration] = useState("10 min");
   const [formVideoUrl, setFormVideoUrl] = useState("");
   const [formPdfUrl, setFormPdfUrl] = useState("");
-  const [formLectureType, setFormLectureType] = useState("internal");
-  const [formExternalUrl, setFormExternalUrl] = useState("");
+  const [formResources, setFormResources] = useState<{ title: string; url: string }[]>([]);
 
   useEffect(() => {
     fetchModules();
@@ -71,8 +71,7 @@ export default function AdminLecturesPage() {
     setFormDuration("10 min");
     setFormVideoUrl("");
     setFormPdfUrl("");
-    setFormLectureType("internal");
-    setFormExternalUrl("");
+    setFormResources([]);
     setIsModalOpen(true);
   };
 
@@ -104,14 +103,28 @@ export default function AdminLecturesPage() {
     setFormDuration(lec.duration || "10 min");
     setFormVideoUrl(lec.video_url || "");
     setFormPdfUrl(lec.pdf_url || "");
-    setFormLectureType(lec.lecture_type || "internal");
-    setFormExternalUrl(lec.external_url || "");
+    setFormResources(lec.resources || []);
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
     setEditingLecture(null);
+    setFormResources([]);
+  };
+
+  const handleAddResource = () => {
+    setFormResources([...formResources, { title: "", url: "" }]);
+  };
+
+  const handleResourceChange = (index: number, field: "title" | "url", value: string) => {
+    const updated = [...formResources];
+    updated[index] = { ...updated[index], [field]: value };
+    setFormResources(updated);
+  };
+
+  const handleRemoveResource = (index: number) => {
+    setFormResources(formResources.filter((_, i) => i !== index));
   };
 
   const handleSave = async () => {
@@ -125,8 +138,9 @@ export default function AdminLecturesPage() {
       duration: formDuration,
       video_url: formVideoUrl,
       pdf_url: formPdfUrl,
-      lecture_type: formLectureType,
-      external_url: formLectureType === "external" ? formExternalUrl : null,
+      lecture_type: "internal",
+      external_url: null,
+      resources: formResources,
       module_slug: selectedModuleSlug,
       published: true, // Auto publish on save for seamless flow
     };
@@ -321,40 +335,51 @@ export default function AdminLecturesPage() {
                 />
               </div>
 
-              <div>
-                <label className="block mb-1 text-sm text-gray-400">Lecture Mode</label>
-                <select
-                  value={formLectureType}
-                  onChange={e => setFormLectureType(e.target.value)}
-                  className="w-full bg-transparent border border-gray-700 rounded p-2 text-white [&>option]:text-black"
-                >
-                  <option value="internal">Internal (Markdown)</option>
-                  <option value="external">External (URL Redirect)</option>
-                </select>
+              <div className="col-span-1 md:col-span-2">
+                <label className="block mb-1 text-sm text-gray-400">Content (Markdown)</label>
+                <textarea
+                  value={formContent}
+                  onChange={e => setFormContent(e.target.value)}
+                  className="w-full bg-transparent border border-gray-700 rounded p-2 text-white h-96 font-mono text-sm"
+                  placeholder="Write the complete lecture content in markdown..."
+                />
               </div>
 
-              {formLectureType === "external" ? (
-                <div>
-                  <label className="block mb-1 text-sm text-gray-400">External URL</label>
-                  <input
-                    type="text"
-                    value={formExternalUrl}
-                    onChange={e => setFormExternalUrl(e.target.value)}
-                    className="w-full bg-transparent border border-gray-700 rounded p-2 text-white"
-                    placeholder="https://example.com/external-resource"
-                  />
-                </div>
-              ) : (
-                <div>
-                  <label className="block mb-1 text-sm text-gray-400">Content (Markdown)</label>
-                  <textarea
-                    value={formContent}
-                    onChange={e => setFormContent(e.target.value)}
-                    className="w-full bg-transparent border border-gray-700 rounded p-2 text-white h-48 font-mono text-sm"
-                    placeholder="Write the lecture content in markdown..."
-                  />
-                </div>
-              )}
+              <div className="col-span-1 md:col-span-2">
+                <label className="block mb-2 text-sm text-gray-400">Additional Resources</label>
+                {formResources.map((res, index) => (
+                  <div key={index} className="flex gap-2 mb-2 items-center">
+                    <input
+                      type="text"
+                      placeholder="Title (e.g. AWS Docs)"
+                      value={res.title}
+                      onChange={(e) => handleResourceChange(index, "title", e.target.value)}
+                      className="flex-1 bg-transparent border border-gray-700 rounded p-2 text-white text-sm"
+                    />
+                    <input
+                      type="text"
+                      placeholder="URL (https://...)"
+                      value={res.url}
+                      onChange={(e) => handleResourceChange(index, "url", e.target.value)}
+                      className="flex-2 bg-transparent border border-gray-700 rounded p-2 text-white text-sm w-1/2"
+                    />
+                    <button
+                      onClick={() => handleRemoveResource(index)}
+                      className="p-2 text-red-400 hover:bg-red-400/10 rounded transition-colors"
+                      title="Remove Resource"
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={handleAddResource}
+                  className="flex items-center gap-1 text-sm text-[#185FA5] hover:text-[#185FA5]/80 transition-colors mt-2"
+                >
+                  <Plus size={16} /> Add Resource
+                </button>
+              </div>
 
               <div className="flex justify-end gap-3 mt-6">
                 <button onClick={closeModal} className="px-4 py-2 border border-gray-700 rounded hover:bg-gray-800">

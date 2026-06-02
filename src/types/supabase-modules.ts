@@ -25,6 +25,7 @@ export interface DbLecture {
   pdf_url: string | null;
   lecture_type: string;
   external_url: string | null;
+  resources?: { title: string; url: string }[] | null;
   published: boolean;
   order_index: number;
 }
